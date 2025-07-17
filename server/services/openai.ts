@@ -283,7 +283,7 @@ export async function get_playlist_criteria_from_prompt(prompt: string): Promise
   }
 }
 
-export async function generateAdvancedPlaylistFromPrompt(config: PlaylistConfig): Promise<any> {
+export async function generateAdvancedPlaylistFromPrompt(config: PlaylistConfig): Promise<AdvancedPlaylistResponse> {
   try {
     // Build a comprehensive prompt incorporating all advanced features
     let systemPrompt = `You are an expert AI music curator with deep knowledge of musical genres, artists, decades, and audio characteristics. 
