@@ -7,6 +7,7 @@ import Sidebar from "@/components/sidebar";
 import Header from "@/components/header";
 import PromptGenerator from "@/components/prompt-generator";
 import PlaylistDisplay from "@/components/playlist-display";
+import PreferencesPanel from "@/components/preferences-panel";
 
 export default function Home() {
   const [location] = useLocation();
@@ -141,6 +142,7 @@ export default function Home() {
                 )}
               </div>
             </div>
+            <PreferencesPanel />
           </div>
         </div>
       </main>
