@@ -38,6 +38,19 @@ An intelligent playlist generation tool that creates custom Spotify playlists us
 - **OpenAI API** (GPT-4) for intelligent playlist generation
 - **OAuth 2.0** for secure Spotify authentication
 
+### Backend / API Flow
+1. **Pull playlist data** using the Spotify API to get track IDs along with
+   metadata and existing audio features.
+2. **Analyze tracks** via Spotify's `/audio-features` endpoint to obtain BPM,
+   energy, valence, danceability, instrumentalness and other metrics.
+3. **Modify the playlist** based on the user's prompt:
+   - Remove songs outside the desired mood, genre, year or BPM range
+   - Reorder or group tracks
+   - Replace tracks with similar recommendations that match the target vibe
+   - Expand the playlist with additional matching songs
+4. **Return** the updated playlist object or create the modified playlist
+   directly in the user's Spotify library.
+
 ## Getting Started
 
 The project is a typical Node + React monorepo. Follow these steps to get a local
