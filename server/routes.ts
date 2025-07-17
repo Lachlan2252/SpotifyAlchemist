@@ -263,13 +263,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...config,
       });
 
-      const featureList = await spotifyService.getAudioFeatures(user.accessToken, finalTracks.map((t: any) => t.id));
-      const featureMap2: Record<string, any> = {};
-      featureList.forEach(f => { if (f && f.id) featureMap2[f.id] = f; });
-
       for (let i = 0; i < finalTracks.length; i++) {
         const track = finalTracks[i];
-        const f = featureMap2[track.id];
+        const f = featureMap[track.id];
         await storage.addTrackToPlaylist({
           playlistId: playlist.id,
           spotifyId: track.id,
