@@ -200,7 +200,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         } catch {}
       }
 
-      const recParams: any = {
+      interface RecommendationParams {
+        limit: number;
+        seed_artists: string[];
+        seed_genres: string[];
+        seed_tracks: string[];
+        min_tempo: number;
+        max_tempo: number;
+        min_energy: number;
+        max_energy: number;
+        min_valence: number;
+        max_valence: number;
+        min_popularity: number;
+        max_popularity: number;
+      }
+
+      const recParams: RecommendationParams = {
         limit: Math.min(100, (config.targetTrackCount || 20) * 2),
         seed_artists: seedArtistIds.slice(0, 5),
         seed_genres: (config.seedGenres || []).slice(0, 5 - seedArtistIds.length - seedTrackIds.length),
