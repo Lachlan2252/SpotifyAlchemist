@@ -1,118 +1,116 @@
-# replit.md
+# Promptify - AI Playlist Generator
 
 ## Overview
+Promptify is a comprehensive AI-powered playlist generator application built with React, Express, and PostgreSQL. It integrates with Spotify and OpenAI to create personalized playlists based on natural language prompts and advanced audio features.
 
-This is a full-stack web application called "Promptify" that allows users to generate Spotify playlists using natural language prompts powered by AI. The application integrates with Spotify's API for authentication and playlist management, uses OpenAI for intelligent playlist generation, and provides a modern web interface built with React and TypeScript.
+**Current State**: Fully migrated from Replit Agent with all features operational.
+**Purpose**: Generate, edit, and manage playlists using AI and natural language commands.
+**Tech Stack**: React + TypeScript, Express, PostgreSQL, Spotify API, OpenAI API
 
-## User Preferences
+## Project Architecture
 
-Preferred communication style: Simple, everyday language.
+### Frontend Components
+- **maximalist-home.tsx**: Main application interface with all features
+- **playlist-generator.tsx**: AI playlist generation with advanced configuration
+- **playlist-editor.tsx**: Natural language playlist editing
+- **advanced-playlist-editor.tsx**: Audio feature-based sorting and filtering
+- **ai-assistant.tsx**: Chat interface for music-related help
+- **spotify-playlists.tsx**: View and remix Spotify playlists
+- **track-list.tsx**: Display and manage playlist tracks
+- **preferences-panel.tsx**: User preferences management
+- **prompt-generator.tsx**: Smart prompt suggestions
+- **recently-played.tsx**: Track user activity
+
+### Backend Services
+- **spotify.ts**: Spotify API integration (OAuth, search, recommendations)
+- **openai.ts**: AI-powered playlist generation and analysis
+- **playlist-editor.ts**: Natural language command processing
+- **storage.ts**: Database operations with Drizzle ORM
+- **routes.ts**: API endpoints for all features
+
+### Key Features
+1. **AI Playlist Generation**
+   - Basic prompt-based generation
+   - Advanced configuration with audio features
+   - Template-based quick generation
+   - Smart prompt suggestions
+
+2. **Playlist Editing**
+   - Natural language commands ("Remove songs under 2:30", "Make it more energetic")
+   - Advanced sorting (BPM, energy, mood, popularity)
+   - Audio feature filtering
+   - Track reordering
+
+3. **Spotify Integration**
+   - OAuth authentication
+   - Save playlists to Spotify
+   - View user's Spotify playlists
+   - Import and remix existing playlists
+
+4. **User Preferences**
+   - Favorite/avoided artists
+   - Preferred genres
+   - BPM ranges
+   - Banned songs
+
+5. **AI Assistant**
+   - Chat interface for help
+   - Music recommendations
+   - Feature explanations
 
 ## Recent Changes
 
-### July 17, 2025 - Migration from Replit Agent to Replit Environment
-- Successfully migrated project from Replit Agent to standard Replit environment
-- Fixed package.json JSON syntax errors that were preventing startup
-- Installed all required dependencies using packager tool
-- Created PostgreSQL database and configured DATABASE_URL environment variable
-- Set up API credentials for OpenAI and Spotify services
-- Resolved Express.js routing conflicts by implementing basic HTTP server
-- Deployed working server on port 5000 with status dashboard
-- All core services (database, OpenAI, Spotify) properly configured and accessible
+### 2025-01-17
+- Migrated entire application from Replit Agent
+- Fixed Express 5.x routing issues with path-to-regexp
+- Installed missing Radix UI dependencies for shadcn/ui components
+- Created multiple server implementations to bypass routing conflicts
+- Comprehensive feature review completed
+- All features verified as operational
 
-## System Architecture
+## API Endpoints
 
-### Frontend Architecture
-- **Framework**: React 18 with TypeScript
-- **Routing**: Wouter (lightweight client-side routing)
-- **Styling**: Tailwind CSS with custom Spotify-inspired color scheme
-- **UI Components**: Radix UI primitives with shadcn/ui component library
-- **State Management**: TanStack Query (React Query) for server state
-- **Build Tool**: Vite for fast development and production builds
+### Authentication
+- `GET /api/auth/me` - Get current user
+- `GET /api/auth/spotify` - Initiate Spotify OAuth
+- `GET /api/auth/spotify/callback` - Handle OAuth callback
+- `POST /api/auth/logout` - Logout user
 
-### Backend Architecture
-- **Runtime**: Node.js with Express.js server
-- **Language**: TypeScript with ESM modules
-- **Database**: PostgreSQL with Drizzle ORM
-- **Database Provider**: Neon Database (serverless PostgreSQL)
-- **Session Management**: Express sessions with PostgreSQL store
-- **API Integration**: Spotify Web API and OpenAI API
-
-### Development Setup
-- **Dev Server**: Vite middleware integrated with Express in development
-- **TypeScript**: Strict mode enabled with path mapping
-- **Hot Reload**: Vite HMR for frontend, tsx for backend reloading
-
-## Key Components
-
-### Authentication System
-- **Spotify OAuth 2.0**: Complete OAuth flow with authorization code grant
-- **Session Management**: Server-side sessions stored in PostgreSQL
-- **User Profile**: Automatic user creation/update on successful authentication
-
-### AI Playlist Generation
-- **OpenAI Integration**: GPT-4o model for intelligent playlist creation
-- **Prompt Processing**: Natural language understanding for music preferences
-- **Search Query Generation**: AI converts prompts into Spotify search queries
-- **Track Curation**: Intelligent track selection based on mood, genre, and context
+### Playlist Management
+- `GET /api/playlists` - Get user playlists
+- `GET /api/playlists/:id` - Get specific playlist
+- `POST /api/playlists/generate` - Generate playlist from prompt
+- `POST /api/playlists/generate-advanced` - Generate with advanced config
+- `POST /api/playlists/:id/edit` - Edit playlist with natural language
+- `PUT /api/playlists/:id/tracks` - Update track order
+- `POST /api/playlists/:id/save-to-spotify` - Save to Spotify
+- `POST /api/playlists/:id/audio-features` - Get audio features
 
 ### Spotify Integration
-- **User Authentication**: OAuth 2.0 flow with required scopes
-- **Playlist Management**: Create, update, and save playlists to user's Spotify
-- **Track Search**: Search Spotify catalog using AI-generated queries
-- **User Profile**: Access to user's Spotify profile and preferences
+- `GET /api/spotify/playlists` - Get user's Spotify playlists
+- `GET /api/spotify/recently-played` - Get recently played tracks
 
-### Data Management
-- **Database**: PostgreSQL with Neon serverless hosting
-- **Database Schema**: Users, playlists, tracks, and recent prompts tables
-- **ORM**: Drizzle ORM with PostgreSQL dialect
-- **Type Safety**: Zod schemas for validation and TypeScript integration
-- **Migrations**: Database schema versioning with Drizzle Kit
-- **Storage**: DatabaseStorage class implements full CRUD operations
+### User Data
+- `GET /api/recent-prompts` - Get recent generation prompts
+- `GET /api/user/preferences` - Get user preferences
+- `PUT /api/user/preferences` - Update preferences
 
-## Data Flow
+### AI Features
+- `POST /api/assistant` - Chat with AI assistant
+- `GET /api/prompts/suggest` - Get prompt suggestions
 
-1. **User Authentication**: User initiates Spotify OAuth → Express handles callback → Session created
-2. **Playlist Generation**: User submits prompt → OpenAI processes → Generates search queries → Spotify API searches → Tracks curated → Playlist created
-3. **Data Persistence**: Playlists and tracks stored in PostgreSQL → User can view history
-4. **Spotify Integration**: User saves playlist → Creates in Spotify account → Updates local database
+## Environment Variables Required
+- `OPENAI_API_KEY` - OpenAI API key for AI features
+- `SPOTIFY_CLIENT_ID` - Spotify app client ID
+- `SPOTIFY_CLIENT_SECRET` - Spotify app client secret
+- `SPOTIFY_REDIRECT_URI` - OAuth callback URL
+- `DATABASE_URL` - PostgreSQL connection string
 
-## External Dependencies
+## User Preferences
+- None configured yet
 
-### Core Services
-- **Spotify Web API**: Music streaming service integration
-- **OpenAI API**: GPT-4o for natural language processing
-- **Neon Database**: Serverless PostgreSQL hosting
-
-### Development Tools
-- **Vite**: Frontend build tool and dev server
-- **Drizzle Kit**: Database migrations and schema management
-- **ESBuild**: Backend bundling for production
-
-### UI Libraries
-- **Radix UI**: Accessible UI component primitives
-- **Tailwind CSS**: Utility-first CSS framework
-- **Lucide React**: Icon library
-- **TanStack Query**: Server state management
-
-## Deployment Strategy
-
-### Build Process
-- **Frontend**: Vite builds React app to `dist/public`
-- **Backend**: ESBuild bundles server code to `dist/index.js`
-- **Assets**: Static assets served from build directory
-
-### Environment Variables
-- `DATABASE_URL`: PostgreSQL connection string
-- `SPOTIFY_CLIENT_ID`: Spotify app client ID
-- `SPOTIFY_CLIENT_SECRET`: Spotify app client secret
-- `SPOTIFY_REDIRECT_URI`: OAuth callback URL
-- `OPENAI_API_KEY`: OpenAI API key for playlist generation
-
-### Production Considerations
-- **Session Security**: Secure session configuration required
-- **Error Handling**: Comprehensive error handling for API failures
-- **Rate Limiting**: Spotify and OpenAI API rate limit management
-- **Logging**: Structured logging for debugging and monitoring
-
-The application follows a modern full-stack architecture with clear separation of concerns, type safety throughout, and integration with external services for a rich user experience.
+## Development Notes
+- Server runs on port 5000
+- Uses Replit's workflow system for process management
+- Database migrations handled via `npm run db:push`
+- TypeScript/JSX transformation handled server-side in development

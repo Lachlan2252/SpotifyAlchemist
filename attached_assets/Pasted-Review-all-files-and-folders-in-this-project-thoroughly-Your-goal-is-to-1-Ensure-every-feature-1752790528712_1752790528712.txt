@@ -1,0 +1,48 @@
+Review all files and folders in this project thoroughly.
+
+Your goal is to:
+1. Ensure **every feature described in prompts, documentation, or code** is properly implemented, fully functional, and connected to the app.
+2. Identify and **fix any bugs**, broken functions, undefined variables, or unused components.
+3. Make sure **every feature has a place in the UI** — nothing should be implemented in the backend or logic without a frontend control, display, or button.
+4. Check that all **backend functions have proper routes, handlers, and responses**.
+5. Make sure frontend and backend are **fully connected** — endpoints used in the frontend actually exist and respond correctly.
+6. Validate all logic for Spotify API usage — especially:
+   - Recommendations
+   - Audio features
+   - Seed handling
+   - Track filtering
+   - Playlist creation
+7. Ensure **prompt parsing is reliable** and maps cleanly to Spotify parameters.
+8. Fix UI bugs or inconsistencies — buttons that don’t trigger anything, missing states, layout issues, or outdated components.
+9. Check for redundant or unused code and remove it.
+10. Check that **all async functions are awaited** and API calls are properly handled with error catching.
+11. Confirm proper use of Spotify OAuth and token refresh flow.
+12. Identify any **missing or incomplete** features mentioned in past prompts or TODOs in code, and implement them if possible.
+
+After reviewing, fix all found issues and refactor or update any part of the app that doesn’t meet these criteria.
+
+This includes reviewing:
+- All React frontend components
+- API handlers and utility functions
+- Spotify service and OpenAI service code
+- Prompt parsing logic
+- Playlist filtering logic
+- Any router or server logic
+- User authentication flows
+- CSS/styling integration and responsiveness
+- .env usage and variable mapping
+
+Then test the full user flow:
+- Prompt → AI → Playlist generation → Spotify creation → Display → Edits
+- Editing existing playlists with smart filtering
+- Display of generated or edited playlists in the UI
+- Error and edge-case handling (e.g., zero results, invalid prompt, auth failure)
+
+Once the full pass is done, ensure the app runs cleanly with:
+- No console errors
+- No 404 or 500s from any endpoint
+- All prompts generating matching, on-theme playlists
+- All generated playlists enforce filters and mood settings
+- All playlist mods work and reflect in Spotify and UI
+
+Output a short summary of the changes and confirmed fixes after the full pass is complete.

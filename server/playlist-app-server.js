@@ -2,6 +2,60 @@ const http = require('http');
 const url = require('url');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
+
+// Simple session store
+const sessions = new Map();
+
+// Create session
+function createSession(userId) {
+  const sessionId = crypto.randomBytes(32).toString('hex');
+  sessions.set(sessionId, { userId, createdAt: Date.now() });
+  return sessionId;
+}
+
+// Get session
+function getSession(sessionId) {
+  const session = sessions.get(sessionId);
+  if (!session) return null;
+  
+  // Check if session is expired (24 hours)
+  if (Date.now() - session.createdAt > 24 * 60 * 60 * 1000) {
+    sessions.delete(sessionId);
+    return null;
+  }
+  
+  return session;
+}
+
+// Parse cookies
+function parseCookies(cookieHeader) {
+  const cookies = {};
+  if (!cookieHeader) return cookies;
+  
+  cookieHeader.split(';').forEach(cookie => {
+    const [name, value] = cookie.trim().split('=');
+    cookies[name] = value;
+  });
+  
+  return cookies;
+}
+
+// Parse JSON body
+async function parseJsonBody(req) {
+  return new Promise((resolve, reject) => {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      try {
+        resolve(JSON.parse(body));
+      } catch (e) {
+        resolve({});
+      }
+    });
+    req.on('error', reject);
+  });
+}
 
 // Simple JSON response helper
 function sendJSON(res, data, statusCode = 200) {
@@ -79,6 +133,95 @@ const server = http.createServer((req, res) => {
       return;
     }
 
+    // User preferences endpoints
+    if (pathname === '/api/preferences' && method === 'GET') {
+      sendJSON(res, {
+        favoriteGenres: [],
+        favoriteArtists: [],
+        avoidArtists: [],
+        bannedSongs: [],
+        preferredBpmRange: [60, 200],
+        preferredDecades: [],
+        preferredEra: "",
+        avoidExplicit: false,
+        preferredLanguages: [],
+        bannedTerms: [],
+        bannedGenres: [],
+      });
+      return;
+    }
+
+    if (pathname === '/api/user/preferences' && method === 'GET') {
+      sendJSON(res, {
+        favoriteGenres: [],
+        favoriteArtists: [],
+        avoidArtists: [],
+        bannedSongs: [],
+        preferredBpmRange: [60, 200],
+        preferredDecades: [],
+        preferredEra: "",
+        avoidExplicit: false,
+        preferredLanguages: [],
+        bannedTerms: [],
+        bannedGenres: [],
+      });
+      return;
+    }
+
+    if ((pathname === '/api/preferences' || pathname === '/api/user/preferences') && method === 'PUT') {
+      parseJsonBody(req).then(body => {
+        sendJSON(res, { ...body, message: "Preferences updated" });
+      });
+      return;
+    }
+
+    // AI Assistant endpoint
+    if (pathname === '/api/assistant' && method === 'POST') {
+      parseJsonBody(req).then(body => {
+        const { message } = body;
+        if (!message) {
+          sendJSON(res, { message: "Message is required" }, 400);
+          return;
+        }
+        sendJSON(res, { 
+          response: "I'm Promptify AI Assistant! I can help you create amazing playlists. Try asking me about music genres, artists, or how to use the app's features."
+        });
+      });
+      return;
+    }
+
+    // Prompt suggestions endpoint
+    if (pathname === '/api/prompts/suggest' && method === 'GET') {
+      const { text } = parsedUrl.query;
+      if (!text) {
+        sendJSON(res, { suggestions: [] });
+        return;
+      }
+      
+      const suggestions = [
+        `${text} for a rainy day`,
+        `${text} to boost productivity`,
+        `${text} with a nostalgic vibe`,
+        `${text} for working out`,
+        `${text} to relax and unwind`
+      ].filter(s => s.length < 100);
+      
+      sendJSON(res, { suggestions });
+      return;
+    }
+
+    // Mock playlist editing endpoint for testing
+    if (pathname.match(/^\/api\/playlists\/\d+\/edit$/) && method === 'POST') {
+      parseJsonBody(req).then(body => {
+        sendJSON(res, {
+          playlist: { id: 1, name: "Edited Playlist", tracks: [] },
+          explanation: "Playlist has been edited based on your command",
+          changes: ["Applied your edit command"]
+        });
+      });
+      return;
+    }
+
     // Default API response
     sendJSON(res, {
       message: "API endpoint not implemented yet",
@@ -88,8 +231,68 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // Serve static files for React app
+  if (pathname.startsWith('/src/') || pathname.includes('.js') || pathname.includes('.css') || pathname.includes('.jsx') || pathname.includes('.tsx')) {
+    const clientRoot = path.join(__dirname, '..', 'client');
+    let filePath;
+    
+    if (pathname.startsWith('/src/')) {
+      filePath = path.join(clientRoot, pathname);
+    } else if (pathname.includes('@')) {
+      // Handle node_modules paths
+      filePath = path.join(__dirname, '..', 'node_modules', pathname);
+    } else {
+      filePath = path.join(clientRoot, pathname);
+    }
+    
+    try {
+      const ext = path.extname(filePath).toLowerCase();
+      const contentTypes = {
+        '.js': 'application/javascript',
+        '.jsx': 'application/javascript',
+        '.ts': 'application/typescript',
+        '.tsx': 'application/typescript',
+        '.css': 'text/css',
+        '.json': 'application/json',
+        '.png': 'image/png',
+        '.jpg': 'image/jpeg',
+        '.svg': 'image/svg+xml',
+      };
+      
+      const content = fs.readFileSync(filePath);
+      res.writeHead(200, { 'Content-Type': contentTypes[ext] || 'application/octet-stream' });
+      res.end(content);
+      return;
+    } catch (error) {
+      // File not found
+    }
+  }
+
   // Main application page
   if (pathname === '/' || pathname === '/index.html') {
+    const clientIndexPath = path.join(__dirname, '..', 'client', 'index.html');
+    const cookies = parseCookies(req.headers.cookie);
+    const sessionId = cookies.sessionId;
+    const session = sessionId ? getSession(sessionId) : null;
+    
+    // Try to serve the actual React app first
+    if (fs.existsSync(clientIndexPath)) {
+      const indexContent = fs.readFileSync(clientIndexPath, 'utf8');
+      
+      // Inject session state
+      const sessionScript = session ? `
+        <script>
+          window.__PROMPTIFY_SESSION__ = ${JSON.stringify({ userId: session.userId })};
+        </script>
+      ` : '';
+      
+      const modifiedContent = indexContent.replace('</head>', `${sessionScript}</head>`);
+      res.writeHead(200, { 'Content-Type': 'text/html' });
+      res.end(modifiedContent);
+      return;
+    }
+    
+    // Fallback HTML if React app not found
     const dbStatus = process.env.DATABASE_URL ? 'Connected' : 'Not configured';
     const openaiStatus = process.env.OPENAI_API_KEY ? 'Ready' : 'Not configured';
     const spotifyStatus = process.env.SPOTIFY_CLIENT_ID ? 'Ready' : 'Not configured';

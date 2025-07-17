@@ -14,6 +14,14 @@ run = ["npm", "run", "start"]
 localPort = 5000
 externalPort = 80
 
+[[ports]]
+localPort = 5173
+externalPort = 5173
+
+[[ports]]
+localPort = 24678
+externalPort = 3000
+
 [env]
 PORT = "5000"
 
@@ -29,6 +37,10 @@ author = "agent"
 task = "workflow.run"
 args = "Start application"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Dev Server"
+
 [[workflows.workflow]]
 name = "Start application"
 author = "agent"
@@ -37,6 +49,15 @@ author = "agent"
 task = "shell.exec"
 args = "node server/playlist-app-server.js"
 waitForPort = 5000
+
+[[workflows.workflow]]
+name = "Dev Server"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd /home/runner/workspace/client && npx vite --host 0.0.0.0 --port 5173"
+waitForPort = 5173
 
 [objectStorage]
 defaultBucketID = "replit-objstore-2d28709c-1ced-43d5-a261-e964e6bc3138"

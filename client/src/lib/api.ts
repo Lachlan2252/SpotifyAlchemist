@@ -53,7 +53,7 @@ export const authApi = {
   },
 
   async logout() {
-    const response = await apiRequest("GET", "/api/auth/logout");
+    const response = await apiRequest("POST", "/api/auth/logout");
     return response.json();
   },
 };
