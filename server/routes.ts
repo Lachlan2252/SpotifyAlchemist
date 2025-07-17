@@ -172,7 +172,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Not authenticated" });
       }
 
-      const config = req.body as PlaylistConfig;
+      const PlaylistConfigSchema = z.object({
+        name: z.string().optional(),
+        description: z.string().optional(),
+        prompt: z.string(),
+        targetTrackCount: z.number().optional(),
+        // Add other fields from PlaylistConfig as needed
+      });
+
+      const parseResult = PlaylistConfigSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ message: "Invalid request body", errors: parseResult.error.errors });
+      }
+
+      const config = parseResult.data;
       
       const user = await storage.getUser(req.session.userId);
       if (!user) {
