@@ -2,6 +2,11 @@ import { generateCompletion } from './openai.js';
 import { SpotifyService } from './spotify.js';
 import { type Track } from '@shared/schema';
 
+function isMostlyEnglish(text: string): boolean {
+  const ascii = text.replace(/[^\x00-\x7F]/g, '');
+  return ascii.length / text.length > 0.8;
+}
+
 interface EditCommand {
   type: 'filter' | 'transform' | 'sort' | 'expand' | 'refine' | 'theme';
   action: string;
@@ -63,14 +68,24 @@ export class PlaylistEditor {
     3. Any emotional or stylistic targets
 
     Command types:
-    - filter: Remove/keep tracks based on criteria (duration, year, genre, etc.)
+    - filter: Remove/keep tracks based on criteria (duration, year, genre, BPM, mood, etc.)
     - transform: Change mood/energy/vibe of the playlist
     - sort: Reorder tracks by specific criteria
     - expand: Add more tracks to the playlist
     - refine: Improve quality or remove unwanted tracks
     - theme: Apply a specific style, era, or character theme
 
-    Return JSON format: {"type": "filter", "action": "remove_short_tracks", "parameters": {"min_duration": 150}}`;
+    Example filter actions include:
+    - remove_short_tracks { min_duration }
+    - remove_by_year { before_year?, after_year? }
+    - remove_by_genre { exclude_genres[] }
+    - remove_low_energy { min_energy }
+    - remove_low_valence { min_valence }
+    - remove_by_bpm { min_bpm?, max_bpm? }
+    - remove_by_artist { exclude_artists[] }
+    - remove_duplicates {}
+    - remove_title_keywords { keywords[] }
+    - remove_non_english {}`;
 
     const response = await generateCompletion(systemPrompt, command);
     return JSON.parse(response);
@@ -125,6 +140,56 @@ export class PlaylistEditor {
         const beforeEnergyCount = filteredTracks.length;
         filteredTracks = filteredTracks.filter(track => (track.energy || 0.5) >= minEnergy);
         changes.push(`Removed ${beforeEnergyCount - filteredTracks.length} low-energy tracks`);
+        break;
+
+      case 'remove_low_valence':
+        const minValence = command.parameters.min_valence || 0.3;
+        const beforeValenceCount = filteredTracks.length;
+        filteredTracks = filteredTracks.filter(track => (track.valence || 0.5) >= minValence);
+        changes.push(`Removed ${beforeValenceCount - filteredTracks.length} low-valence tracks`);
+        break;
+
+      case 'remove_by_bpm':
+        const minBpm = command.parameters.min_bpm || 0;
+        const maxBpm = command.parameters.max_bpm || Infinity;
+        const beforeBpmCount = filteredTracks.length;
+        filteredTracks = filteredTracks.filter(track => {
+          const tempo = track.tempo || 0;
+          return tempo >= minBpm && tempo <= maxBpm;
+        });
+        changes.push(`Removed ${beforeBpmCount - filteredTracks.length} tracks outside BPM range`);
+        break;
+
+      case 'remove_by_artist':
+        const excludeArtists = (command.parameters.exclude_artists || []).map((a: string) => a.toLowerCase());
+        const beforeArtistCount = filteredTracks.length;
+        filteredTracks = filteredTracks.filter(track => !excludeArtists.some((a: string) => track.artist.toLowerCase().includes(a)));
+        changes.push(`Removed ${beforeArtistCount - filteredTracks.length} tracks by excluded artists`);
+        break;
+
+      case 'remove_duplicates':
+        const seen = new Set<string>();
+        const beforeDupCount = filteredTracks.length;
+        filteredTracks = filteredTracks.filter(track => {
+          const key = `${track.name.toLowerCase()}-${track.artist.toLowerCase()}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+        changes.push(`Removed ${beforeDupCount - filteredTracks.length} duplicate tracks`);
+        break;
+
+      case 'remove_title_keywords':
+        const keywords = (command.parameters.keywords || ['remix', 'live', 'slowed', 'sped up']).map((k: string) => k.toLowerCase());
+        const beforeTitleCount = filteredTracks.length;
+        filteredTracks = filteredTracks.filter(track => !keywords.some((k: string) => track.name.toLowerCase().includes(k)));
+        changes.push(`Removed ${beforeTitleCount - filteredTracks.length} tracks with unwanted title keywords`);
+        break;
+
+      case 'remove_non_english':
+        const beforeLangCount = filteredTracks.length;
+        filteredTracks = filteredTracks.filter(track => isMostlyEnglish(track.name));
+        changes.push(`Removed ${beforeLangCount - filteredTracks.length} non-English tracks`);
         break;
     }
 
@@ -191,6 +256,11 @@ export class PlaylistEditor {
       case 'sort_by_energy':
         sortedTracks.sort((a, b) => (b.energy || 0.5) - (a.energy || 0.5));
         changes.push('Sorted by energy level (high to low)');
+        break;
+
+      case 'sort_by_valence':
+        sortedTracks.sort((a, b) => (b.valence || 0.5) - (a.valence || 0.5));
+        changes.push('Sorted by mood (valence high to low)');
         break;
 
       case 'sort_by_year':
