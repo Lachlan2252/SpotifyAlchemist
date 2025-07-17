@@ -39,7 +39,7 @@ export class SpotifyService {
     this.clientId = process.env.SPOTIFY_CLIENT_ID || "";
     this.clientSecret = process.env.SPOTIFY_CLIENT_SECRET || "";
     // Use the exact redirect URI from your Spotify app settings
-    this.redirectUri = "https://40b819fa-7b5c-4452-9a74-ed7a3167e37d-00-9g1xwfbar0b6.picard.replit.dev/callback";
+    this.redirectUri = process.env.SPOTIFY_REDIRECT_URI || "http://localhost:5000/api/auth/spotify/callback";
   }
 
   getAuthUrl(): string {
