@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -94,7 +94,11 @@ const AUDIO_KEYS = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", 
 const MUSICAL_MODES = ["Major", "Minor"];
 const EXPLICIT_OPTIONS = ["allow", "filter", "prefer_clean"];
 
-export default function PlaylistGenerator({ onPlaylistGenerated }: { onPlaylistGenerated: (playlist: any) => void }) {
+export default function PlaylistGenerator({ onPlaylistGenerated, templatePrompt, onTemplateUsed }: { 
+  onPlaylistGenerated: (playlist: any) => void;
+  templatePrompt?: string;
+  onTemplateUsed?: () => void;
+}) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   

@@ -64,6 +64,24 @@ export default function MaximalistHome() {
     }
   };
 
+  const handleTemplateClick = (prompt: string) => {
+    // Switch to generate tab and trigger playlist generation
+    setActiveTab("generate");
+    // You can pass this prompt to the PlaylistGenerator component
+    setCurrentTemplatePrompt(prompt);
+  };
+
+  const handlePlaylistClick = (playlist: any) => {
+    setCurrentPlaylist(playlist);
+  };
+
+  const handlePromptClick = (prompt: string) => {
+    setCurrentTemplatePrompt(prompt);
+    setActiveTab("generate");
+  };
+
+  const [currentTemplatePrompt, setCurrentTemplatePrompt] = useState<string>("");
+
   if (userLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
@@ -189,12 +207,12 @@ export default function MaximalistHome() {
                   <h3 className="text-white font-semibold">Quick Templates</h3>
                   <div className="grid grid-cols-1 gap-2">
                     {[
-                      { name: "Villain Origin Story", desc: "Dark transformation vibes" },
-                      { name: "Main Character Energy", desc: "Protagonist anthem" },
-                      { name: "Study with Vengeance", desc: "Aggressive focus music" },
-                      { name: "Cowboy Rave", desc: "Western meets electronic" },
+                      { name: "Villain Origin Story", desc: "Dark transformation vibes", prompt: "Create a dark, intense playlist for a villain's origin story with haunting melodies, heavy bass, and dramatic crescendos" },
+                      { name: "Main Character Energy", desc: "Protagonist anthem", prompt: "Epic main character energy playlist with empowering anthems, soaring vocals, and cinematic builds" },
+                      { name: "Study with Vengeance", desc: "Aggressive focus music", prompt: "Aggressive study playlist with dark electronic beats, heavy drums, and intense energy for focused work" },
+                      { name: "Cowboy Rave", desc: "Western meets electronic", prompt: "Western country meets electronic dance music fusion with banjos, synthesizers, and heavy beats" },
                     ].map((template, index) => (
-                      <Card key={index} className="bg-gray-800/50 border-gray-700 hover:bg-gray-700/50 cursor-pointer transition-colors">
+                      <Card key={index} className="bg-gray-800/50 border-gray-700 hover:bg-gray-700/50 cursor-pointer transition-colors" onClick={() => handleTemplateClick(template.prompt)}>
                         <CardContent className="p-3">
                           <p className="text-white text-sm font-medium">{template.name}</p>
                           <p className="text-gray-400 text-xs">{template.desc}</p>
@@ -209,14 +227,27 @@ export default function MaximalistHome() {
                 <div className="space-y-4">
                   <h3 className="text-white font-semibold">Your Playlists ({playlists?.length || 0})</h3>
                   <div className="space-y-2">
-                    {playlists?.map((playlist: any) => (
-                      <Card key={playlist.id} className="bg-gray-800/50 border-gray-700 hover:bg-gray-700/50 cursor-pointer transition-colors">
-                        <CardContent className="p-3">
-                          <p className="text-white text-sm font-medium">{playlist.name}</p>
-                          <p className="text-gray-400 text-xs">{playlist.trackCount} tracks</p>
-                        </CardContent>
-                      </Card>
-                    ))}
+                    {playlistsLoading ? (
+                      <div className="text-center py-4">
+                        <div className="animate-spin w-6 h-6 border-2 border-purple-500 border-t-transparent rounded-full mx-auto"></div>
+                        <p className="text-gray-400 text-sm mt-2">Loading playlists...</p>
+                      </div>
+                    ) : playlists?.length > 0 ? (
+                      playlists.map((playlist: any) => (
+                        <Card key={playlist.id} className="bg-gray-800/50 border-gray-700 hover:bg-gray-700/50 cursor-pointer transition-colors" onClick={() => handlePlaylistClick(playlist)}>
+                          <CardContent className="p-3">
+                            <p className="text-white text-sm font-medium">{playlist.name}</p>
+                            <p className="text-gray-400 text-xs">{playlist.trackCount} tracks</p>
+                            <p className="text-gray-500 text-xs mt-1">{new Date(playlist.createdAt).toLocaleDateString()}</p>
+                          </CardContent>
+                        </Card>
+                      ))
+                    ) : (
+                      <div className="text-center py-4">
+                        <p className="text-gray-400 text-sm">No playlists yet</p>
+                        <p className="text-gray-500 text-xs">Generate your first playlist to get started</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </TabsContent>
@@ -225,14 +256,21 @@ export default function MaximalistHome() {
                 <div className="space-y-4">
                   <h3 className="text-white font-semibold">Recent Prompts</h3>
                   <div className="space-y-2">
-                    {recentPrompts?.map((prompt: any) => (
-                      <Card key={prompt.id} className="bg-gray-800/50 border-gray-700 hover:bg-gray-700/50 cursor-pointer transition-colors">
-                        <CardContent className="p-3">
-                          <p className="text-white text-sm">{prompt.prompt}</p>
-                          <p className="text-gray-400 text-xs">{new Date(prompt.createdAt).toLocaleDateString()}</p>
-                        </CardContent>
-                      </Card>
-                    ))}
+                    {recentPrompts?.length > 0 ? (
+                      recentPrompts.map((prompt: any) => (
+                        <Card key={prompt.id} className="bg-gray-800/50 border-gray-700 hover:bg-gray-700/50 cursor-pointer transition-colors" onClick={() => handlePromptClick(prompt.prompt)}>
+                          <CardContent className="p-3">
+                            <p className="text-white text-sm">{prompt.prompt}</p>
+                            <p className="text-gray-400 text-xs">{new Date(prompt.createdAt).toLocaleDateString()}</p>
+                          </CardContent>
+                        </Card>
+                      ))
+                    ) : (
+                      <div className="text-center py-4">
+                        <p className="text-gray-400 text-sm">No recent prompts</p>
+                        <p className="text-gray-500 text-xs">Your prompt history will appear here</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </TabsContent>
@@ -277,7 +315,7 @@ export default function MaximalistHome() {
               </Card>
             </div>
           ) : (
-            <PlaylistGenerator onPlaylistGenerated={setCurrentPlaylist} />
+            <PlaylistGenerator onPlaylistGenerated={setCurrentPlaylist} templatePrompt={currentTemplatePrompt} onTemplateUsed={() => setCurrentTemplatePrompt("")} />
           )}
         </div>
       </div>
