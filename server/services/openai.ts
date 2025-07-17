@@ -147,3 +147,78 @@ export async function generateCompletion(systemPrompt: string, userPrompt: strin
     throw new Error("Failed to generate completion: " + (error as Error).message);
   }
 }
+
+export async function generateAdvancedPlaylistFromPrompt(config: any): Promise<any> {
+  try {
+    // Build a comprehensive prompt incorporating all advanced features
+    let systemPrompt = `You are an expert AI music curator with deep knowledge of musical genres, artists, decades, and audio characteristics. 
+    Generate a playlist based on the provided advanced configuration. Consider all parameters carefully.
+
+    Your task is to create intelligent search queries that will find the perfect tracks for this playlist.
+    
+    Return JSON format with:
+    {
+      "name": "playlist name",
+      "description": "playlist description",
+      "searchQueries": ["query1", "query2", "query3", ...],
+      "reasoning": "detailed explanation of your curation choices"
+    }`;
+
+    let userPrompt = `Main prompt: ${config.prompt}
+
+Advanced Configuration:
+- Vibe: ${config.vibe || "not specified"}
+- Mood: ${config.mood || "not specified"}
+- Scene: ${config.scene || "not specified"}
+- Energy Scale: ${config.energyScale || 5}/10
+- Darkness Scale: ${config.darknessScale || 5}/10
+- Emotional Tone: ${config.emotionalTone || "not specified"}
+
+Audio Features (0.0-1.0):
+- Target Energy: ${config.targetEnergy || 0.5}
+- Target Danceability: ${config.targetDanceability || 0.5}
+- Target Valence: ${config.targetValence || 0.5}
+- Target Tempo: ${config.targetTempo || 120} BPM
+- Audio Key: ${config.audioKey || "any"}
+- Musical Mode: ${config.musicalMode || "any"}
+
+Time & Era:
+- Decades: ${config.decadeFilter?.join(", ") || "any"}
+- Year Range: ${config.yearRangeStart || 1960} - ${config.yearRangeEnd || 2024}
+- Only New Music: ${config.onlyNewMusic || false}
+- Only Throwbacks: ${config.onlyThrowbacks || false}
+
+Artists & Genres:
+- Seed Artists: ${config.seedArtists?.join(", ") || "none"}
+- Seed Genres: ${config.seedGenres?.join(", ") || "none"}
+- Avoid Overplayed: ${config.avoidOverplayed || false}
+- Only Underground: ${config.onlyUnderground || false}
+- Popularity Threshold: ${config.popularityThreshold || 50}/100
+
+Structure:
+- Target Track Count: ${config.targetTrackCount || 20}
+- Story Arc Mode: ${config.storyArcMode || false}
+- Segmented Mode: ${config.segmentedMode || false}
+
+Style:
+- Style Fusion: ${config.styleFusion?.join(" + ") || "none"}
+- Randomness Level: ${config.randomnessLevel || 5}/10
+- Balance Hits vs Gems: ${config.balanceHitsGems || 5}/10
+- Explicit Lyrics: ${config.explicitLyrics || "allow"}
+- Language Specific: ${config.languageSpecific || "any"}
+
+Template Used: ${config.templateUsed || "none"}
+
+Create ${config.targetTrackCount || 20} search queries that will find the perfect tracks for this playlist. 
+Each query should be a natural language search that Spotify can understand.
+Consider decade filters, genre preferences, mood, energy level, and all other parameters.
+If story arc mode is enabled, structure queries to progress from intro → build → climax → resolution.
+If segmented mode is enabled, create distinct sections with different characteristics.`;
+
+    const response = await generateCompletion(systemPrompt, userPrompt);
+    return JSON.parse(response);
+  } catch (error) {
+    console.error("Advanced playlist generation error:", error);
+    throw new Error("Failed to generate advanced playlist: " + (error as Error).message);
+  }
+}

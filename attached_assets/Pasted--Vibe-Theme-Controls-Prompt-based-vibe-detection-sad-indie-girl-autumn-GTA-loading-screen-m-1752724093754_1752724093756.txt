@@ -1,0 +1,125 @@
+🎯 Vibe & Theme Controls
+Prompt-based vibe detection ("sad indie girl autumn", "GTA loading screen music")
+
+Mood selection: happy / sad / angry / romantic / chaotic / sleepy / nostalgic / etc.
+
+Scene-based prompts: "songs to walk home to after getting dumped", "alien rave"
+
+Energy scale (1–10): calm → hype
+
+Darkness scale (1–10): sunny → sinister
+
+Emotional tone: dreamy / rebellious / mellow / epic / sensual / quirky
+
+🧬 Audio Feature Filters (Spotify Audio Analysis)
+Energy (0.0–1.0)
+
+Danceability
+
+Acousticness
+
+Instrumentalness
+
+Liveness (avoid live recordings or include only live)
+
+Speechiness (for more lyrical or more instrumental tracks)
+
+Valence (happy vs. sad feel)
+
+Tempo / BPM range
+
+Audio key or musical mode (minor/major)
+
+📅 Time & Era Control
+Decade filters (e.g., only 90s, or 2000s pop-punk)
+
+Specific year ranges (e.g., 2005–2012)
+
+Only new music (past X months)
+
+Only throwbacks (before a specific year)
+
+"Mixed era" mode (e.g., 70s funk + modern trap)
+
+👨‍🎤 Artist/Track/Genre Controls
+Seed artists (e.g., “make a playlist inspired by Tame Impala and Kali Uchis”)
+
+Seed genres (e.g., “electronic R&B + future funk”)
+
+Include specific tracks
+
+Exclude specific artists / genres / songs
+
+Avoid overplayed artists (based on popularity or user history)
+
+Only underground / lesser-known artists (Spotify popularity score < X)
+
+📐 Playlist Size & Shape
+Number of tracks (exact or range)
+
+Total duration range (e.g., 30 minutes to 1 hour)
+
+Time-based pacing (e.g., for a 45-minute run)
+
+Segmenting: Intro → Middle → Outro
+
+“Story arc” mode: slow → upbeat → emotional climax → cooldown
+
+🔄 Remixing / Style Fusion
+Combine styles (e.g., “jazz + trap + anime outro energy”)
+
+Mashup vibes (e.g., “2000s emo + cowboy western”)
+
+Genre-hopping (intentional chaotic energy)
+
+Generate multiple genre versions of same prompt (e.g., sad pop / sad rock / sad lofi)
+
+🎚️ Customization & Fine-Tuning
+Adjustable randomness (e.g., how strictly it follows the original vibe)
+
+Balance between hits and hidden gems
+
+Explicit lyrics: allow / filter / prefer clean versions
+
+Remix mode: same prompt, but funkier tracks
+
+Smart lyrics toggle (emphasize lyrical content / message)
+
+Auto-translate prompt into language-specific song choices (e.g., French sad love songs)
+
+📦 Playlist Templates (Built-in Prompt Presets)
+"Study with a vengeance"
+
+"Road trip into the apocalypse"
+
+"Songs that scream main character"
+
+"Villain origin story"
+
+"Cowboy-core but make it rave"
+
+"Hyperpop breakup recovery arc"
+
+"Fantasy RPG soundtrack but modern"
+
+"Make this playlist feel like a Quentin Tarantino movie"
+
+🤖 Smart Add-ons
+Match previous Spotify playlist vibe (by playlist ID)
+
+Generate based on your listening history (top songs/artists)
+
+Auto-curate based on time of day, weather, or location
+
+Generate multiple variations of same playlist prompt (v1, v2, v3)
+
+AI can explain why each song was chosen
+
+🔗 Output Options
+Send to your Spotify account automatically
+
+Generate temporary preview playlist (expires after X time)
+
+Export as text list or shareable link
+
+Save multiple versions in-app (playlist versioning)

@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { spotifyService } from "./services/spotify";
-import { generatePlaylistFromPrompt, modifyPlaylist } from "./services/openai";
+import { generatePlaylistFromPrompt, generateAdvancedPlaylistFromPrompt, modifyPlaylist } from "./services/openai";
 import { PlaylistEditor } from "./services/playlist-editor";
 import { z } from "zod";
 
@@ -163,6 +163,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Generate playlist error:", error);
       res.status(500).json({ message: "Failed to generate playlist" });
+    }
+  });
+
+  app.post("/api/playlists/generate-advanced", async (req, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const config = req.body;
+      
+      const user = await storage.getUser(req.session.userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Generate playlist with advanced configuration
+      const playlistData = await generateAdvancedPlaylistFromPrompt(config);
+
+      // Search for tracks using Spotify API with advanced filters
+      const tracks: any[] = [];
+      for (const query of playlistData.searchQueries) {
+        try {
+          const searchResults = await spotifyService.searchTracks(user.accessToken, query, 5);
+          tracks.push(...searchResults);
+        } catch (error) {
+          console.error(`Search failed for query: ${query}`, error);
+        }
+      }
+
+      // Remove duplicates and apply advanced filtering
+      const uniqueTracks = tracks.filter((track, index, self) => 
+        index === self.findIndex(t => t.id === track.id)
+      ).slice(0, config.targetTrackCount || 25);
+
+      // Create playlist in database with advanced configuration
+      const playlist = await storage.createPlaylist({
+        userId: user.id,
+        name: config.name || playlistData.name,
+        description: config.description || playlistData.description,
+        prompt: config.prompt,
+        trackCount: uniqueTracks.length,
+        isPublic: false,
+        ...config, // Include all advanced configuration
+      });
+
+      // Add tracks to database
+      for (let i = 0; i < uniqueTracks.length; i++) {
+        const track = uniqueTracks[i];
+        await storage.addTrackToPlaylist({
+          playlistId: playlist.id,
+          spotifyId: track.id,
+          name: track.name,
+          artist: track.artists[0]?.name || "Unknown Artist",
+          album: track.album.name,
+          duration: track.duration_ms,
+          imageUrl: track.album.images[0]?.url || null,
+          previewUrl: track.preview_url,
+          position: i,
+        });
+      }
+
+      // Save recent prompt
+      await storage.addRecentPrompt({
+        userId: user.id,
+        prompt: config.prompt,
+        playlistId: playlist.id,
+      });
+
+      const fullPlaylist = await storage.getPlaylistWithTracks(playlist.id);
+      res.json(fullPlaylist);
+    } catch (error) {
+      console.error("Generate advanced playlist error:", error);
+      res.status(500).json({ message: "Failed to generate advanced playlist" });
     }
   });
 
