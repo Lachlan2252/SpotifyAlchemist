@@ -152,6 +152,27 @@ Use Electron to run Promptify as a native macOS application.
 1. `npm run electron:dev` to launch the app with the dev server.
 2. `npm run electron:pack` to create a macOS app bundle (requires macOS).
 
+### Downloading the Desktop App
+
+If you just want to use the macOS version without building it yourself:
+
+1. Visit the GitHub **Releases** page for this project.
+2. Download the latest `Promptify.dmg` file.
+3. Open the DMG and drag **Promptify** into your `Applications` folder.
+
+### Packaging a DMG Yourself
+
+If you are developing or want to build from source, you can create the DMG on a
+macOS machine:
+
+```bash
+npm install
+npm run electron:pack
+```
+
+The packaged `.dmg` will be available in the `dist/` directory. Open it and drag
+the **Promptify** app into `Applications` to install.
+
 ## Contributing
 
 1. Fork the repository
