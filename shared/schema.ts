@@ -157,3 +157,7 @@ export type Track = typeof tracks.$inferSelect;
 export type InsertTrack = z.infer<typeof insertTrackSchema>;
 export type RecentPrompt = typeof recentPrompts.$inferSelect;
 export type InsertRecentPrompt = z.infer<typeof insertRecentPromptSchema>;
+
+export interface PlaylistWithTracks extends Playlist {
+  tracks: Track[];
+}

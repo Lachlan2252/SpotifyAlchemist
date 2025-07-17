@@ -1,5 +1,11 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import {
+  type User,
+  type Playlist,
+  type RecentPrompt,
+  type PlaylistWithTracks,
+} from "@shared/schema";
 import { useLocation } from "wouter";
 import { useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -9,30 +15,40 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PlaylistGenerator from "@/components/playlist-generator";
 import TrackList from "@/components/track-list";
-import { Music, Sparkles, History, Library, Settings, User, Zap } from "lucide-react";
+import {
+  Music,
+  Sparkles,
+  History,
+  Library,
+  Settings,
+  User as UserIcon,
+  Zap,
+} from "lucide-react";
 
 export default function MaximalistHome() {
   const [location] = useLocation();
   const { toast } = useToast();
-  const [currentPlaylist, setCurrentPlaylist] = useState<any>(null);
+  const [currentPlaylist, setCurrentPlaylist] = useState<PlaylistWithTracks | null>(
+    null
+  );
   const [activeTab, setActiveTab] = useState("generate");
 
-  const { data: user, isLoading: userLoading } = useQuery({
+  const { data: user, isLoading: userLoading } = useQuery<User | null>({
     queryKey: ["/api/auth/me"],
     retry: false,
   });
 
-  const { data: playlists, isLoading: playlistsLoading } = useQuery({
+  const { data: playlists, isLoading: playlistsLoading } = useQuery<Playlist[]>({
     queryKey: ["/api/playlists"],
     enabled: !!user,
   });
 
-  const { data: recentPrompts } = useQuery({
+  const { data: recentPrompts } = useQuery<RecentPrompt[]>({
     queryKey: ["/api/recent-prompts"],
     enabled: !!user,
   });
 
-  const { data: spotifyPlaylists } = useQuery({
+  const { data: spotifyPlaylists } = useQuery<any[]>({
     queryKey: ["/api/spotify/playlists"],
     enabled: !!user,
   });
@@ -232,8 +248,8 @@ export default function MaximalistHome() {
                         <div className="animate-spin w-6 h-6 border-2 border-purple-500 border-t-transparent rounded-full mx-auto"></div>
                         <p className="text-gray-400 text-sm mt-2">Loading playlists...</p>
                       </div>
-                    ) : playlists?.length > 0 ? (
-                      playlists.map((playlist: any) => (
+                    ) : playlists && playlists.length > 0 ? (
+                      playlists.map((playlist: Playlist) => (
                         <Card key={playlist.id} className="bg-gray-800/50 border-gray-700 hover:bg-gray-700/50 cursor-pointer transition-colors" onClick={() => handlePlaylistClick(playlist)}>
                           <CardContent className="p-3">
                             <p className="text-white text-sm font-medium">{playlist.name}</p>
@@ -256,8 +272,8 @@ export default function MaximalistHome() {
                 <div className="space-y-4">
                   <h3 className="text-white font-semibold">Recent Prompts</h3>
                   <div className="space-y-2">
-                    {recentPrompts?.length > 0 ? (
-                      recentPrompts.map((prompt: any) => (
+                    {recentPrompts && recentPrompts.length > 0 ? (
+                      recentPrompts.map((prompt: RecentPrompt) => (
                         <Card key={prompt.id} className="bg-gray-800/50 border-gray-700 hover:bg-gray-700/50 cursor-pointer transition-colors" onClick={() => handlePromptClick(prompt.prompt)}>
                           <CardContent className="p-3">
                             <p className="text-white text-sm">{prompt.prompt}</p>

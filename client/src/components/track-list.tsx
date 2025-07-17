@@ -2,9 +2,10 @@ import { type Track } from "@shared/schema";
 
 interface TrackListProps {
   tracks: Track[];
+  showArtwork?: boolean;
 }
 
-export default function TrackList({ tracks }: TrackListProps) {
+export default function TrackList({ tracks, showArtwork }: TrackListProps) {
   const formatDuration = (ms: number) => {
     const minutes = Math.floor(ms / 60000);
     const seconds = Math.floor((ms % 60000) / 1000);
@@ -28,11 +29,16 @@ export default function TrackList({ tracks }: TrackListProps) {
             <span className="group-hover:hidden text-sm">{index + 1}</span>
             <i className="fas fa-play hidden group-hover:block text-sm"></i>
           </div>
-          <img 
-            src={track.imageUrl || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=40&h=40"} 
-            alt="Track artwork" 
-            className="w-10 h-10 rounded ml-4 object-cover"
-          />
+          {showArtwork !== false && (
+            <img
+              src={
+                track.imageUrl ||
+                "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=40&h=40"
+              }
+              alt="Track artwork"
+              className="w-10 h-10 rounded ml-4 object-cover"
+            />
+          )}
           <div className="ml-4 flex-1">
             <p className="text-white font-medium">{track.name}</p>
             <p className="text-gray-400 text-sm">{track.artist}</p>

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import TrackList from "@/components/track-list";
 import PlaylistActions from "@/components/playlist-actions";
 import PlaylistEditor from "@/components/playlist-editor";
+import { type PlaylistWithTracks } from "@shared/schema";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -11,9 +12,11 @@ import { useToast } from "@/hooks/use-toast";
 export default function PlaylistDisplay() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [playlistState, setPlaylistState] = useState<any>(null);
+  const [playlistState, setPlaylistState] = useState<PlaylistWithTracks | null>(
+    null
+  );
 
-  const { data: currentPlaylist, isLoading } = useQuery({
+  const { data: currentPlaylist, isLoading } = useQuery<PlaylistWithTracks | null>({
     queryKey: ["/api/playlists", "current"],
     enabled: false,
   });
@@ -102,7 +105,7 @@ export default function PlaylistDisplay() {
           <div className="flex items-center space-x-3">
             <Button
               onClick={() => saveToSpotify.mutate(currentPlaylist.id)}
-              disabled={saveToSpotify.isPending || currentPlaylist.spotifyId}
+              disabled={saveToSpotify.isPending || !!currentPlaylist.spotifyId}
               className="spotify-green hover:bg-green-600 text-white px-6 py-2 rounded-full font-medium transition-colors"
             >
               <i className="fas fa-plus mr-2"></i>

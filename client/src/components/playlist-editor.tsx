@@ -13,9 +13,11 @@ interface EditMessage {
   changes?: string[];
 }
 
+import { type PlaylistWithTracks } from "@shared/schema";
+
 interface PlaylistEditorProps {
-  playlistId: number;
-  onPlaylistUpdate: (playlist: any) => void;
+  playlist: PlaylistWithTracks;
+  onPlaylistUpdate: (playlist: PlaylistWithTracks) => void;
 }
 
 const EXAMPLE_COMMANDS = [
@@ -31,7 +33,7 @@ const EXAMPLE_COMMANDS = [
   "Make this sound like a coffee shop playlist"
 ];
 
-export default function PlaylistEditor({ playlistId, onPlaylistUpdate }: PlaylistEditorProps) {
+export default function PlaylistEditor({ playlist, onPlaylistUpdate }: PlaylistEditorProps) {
   const [command, setCommand] = useState("");
   const [messages, setMessages] = useState<EditMessage[]>([]);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -41,11 +43,12 @@ export default function PlaylistEditor({ playlistId, onPlaylistUpdate }: Playlis
 
   const editPlaylist = useMutation({
     mutationFn: async (command: string) => {
-      const response = await apiRequest(`/api/playlists/${playlistId}/edit`, {
-        method: "POST",
-        body: { command },
-      });
-      return response;
+      const response = await apiRequest(
+        "POST",
+        `/api/playlists/${playlist.id}/edit`,
+        { command }
+      );
+      return response.json();
     },
     onSuccess: (data) => {
       const assistantMessage: EditMessage = {
