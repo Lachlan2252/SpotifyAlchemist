@@ -1,6 +1,6 @@
 import { users, playlists, tracks, recentPrompts, type User, type InsertUser, type Playlist, type InsertPlaylist, type Track, type InsertTrack, type InsertRecentPrompt, type RecentPrompt } from "@shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
@@ -144,7 +144,7 @@ export class DatabaseStorage implements IStorage {
   async removeTrackFromPlaylist(playlistId: number, trackId: number): Promise<void> {
     await db
       .delete(tracks)
-      .where(eq(tracks.id, trackId));
+      .where(and(eq(tracks.id, trackId), eq(tracks.playlistId, playlistId)));
   }
 
   async addRecentPrompt(insertPrompt: InsertRecentPrompt): Promise<RecentPrompt> {
