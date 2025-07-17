@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { type Track, type PlaylistWithTracks } from "@shared/schema";
 import { 
   ArrowUpDown, 
   Zap, 
@@ -23,29 +24,9 @@ import {
   Volume2
 } from "lucide-react";
 
-interface Track {
-  id: number;
-  spotifyId: string;
-  name: string;
-  artist: string;
-  album: string;
-  duration: number;
-  energy?: number;
-  danceability?: number;
-  valence?: number;
-  tempo?: number;
-  popularity?: number;
-  acousticness?: number;
-  instrumentalness?: number;
-  liveness?: number;
-  speechiness?: number;
-  loudness?: number;
-  position: number;
-}
-
 interface AdvancedPlaylistEditorProps {
-  playlist: any;
-  onPlaylistUpdate: (playlist: any) => void;
+  playlist: PlaylistWithTracks;
+  onPlaylistUpdate: (playlist: PlaylistWithTracks) => void;
 }
 
 export default function AdvancedPlaylistEditor({ playlist, onPlaylistUpdate }: AdvancedPlaylistEditorProps) {
@@ -345,7 +326,9 @@ export default function AdvancedPlaylistEditor({ playlist, onPlaylistUpdate }: A
                     </label>
                     <Slider
                       value={energyFilter}
-                      onValueChange={setEnergyFilter}
+                      onValueChange={(val) =>
+                        setEnergyFilter(val as [number, number])
+                      }
                       max={1}
                       min={0}
                       step={0.1}
@@ -359,7 +342,9 @@ export default function AdvancedPlaylistEditor({ playlist, onPlaylistUpdate }: A
                     </label>
                     <Slider
                       value={bpmFilter}
-                      onValueChange={setBpmFilter}
+                      onValueChange={(val) =>
+                        setBpmFilter(val as [number, number])
+                      }
                       max={200}
                       min={60}
                       step={1}
@@ -373,7 +358,9 @@ export default function AdvancedPlaylistEditor({ playlist, onPlaylistUpdate }: A
                     </label>
                     <Slider
                       value={moodFilter}
-                      onValueChange={setMoodFilter}
+                      onValueChange={(val) =>
+                        setMoodFilter(val as [number, number])
+                      }
                       max={1}
                       min={0}
                       step={0.1}

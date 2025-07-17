@@ -10,13 +10,13 @@ interface SidebarProps {
 export default function Sidebar({ playlists, recentPrompts }: SidebarProps) {
   const [location] = useLocation();
 
-  const { data: spotifyPlaylists } = useQuery({
+  const { data: spotifyPlaylists } = useQuery<any[]>({
     queryKey: ["/api/spotify/playlists"],
     retry: false,
     refetchOnWindowFocus: false,
   });
 
-  const { data: recentlyPlayed } = useQuery({
+  const { data: recentlyPlayed } = useQuery<any[]>({
     queryKey: ["/api/spotify/recently-played"],
     retry: false,
     refetchOnWindowFocus: false,

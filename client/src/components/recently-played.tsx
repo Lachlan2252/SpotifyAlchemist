@@ -14,7 +14,7 @@ interface SpotifyTrack {
 }
 
 export default function RecentlyPlayed() {
-  const { data: recentlyPlayed, isLoading } = useQuery({
+  const { data: recentlyPlayed, isLoading } = useQuery<SpotifyTrack[]>({
     queryKey: ["/api/spotify/recently-played"],
     retry: false,
   });

@@ -11,7 +11,7 @@ interface SpotifyPlaylist {
 }
 
 export default function SpotifyPlaylists() {
-  const { data: spotifyPlaylists, isLoading } = useQuery({
+  const { data: spotifyPlaylists, isLoading } = useQuery<SpotifyPlaylist[]>({
     queryKey: ["/api/spotify/playlists"],
     retry: false,
   });

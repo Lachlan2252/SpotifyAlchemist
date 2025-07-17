@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { type User, type Playlist, type RecentPrompt } from "@shared/schema";
 import { useLocation } from "wouter";
 import { useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -11,17 +12,17 @@ export default function Home() {
   const [location] = useLocation();
   const { toast } = useToast();
 
-  const { data: user, isLoading: userLoading } = useQuery({
+  const { data: user, isLoading: userLoading } = useQuery<User | null>({
     queryKey: ["/api/auth/me"],
     retry: false,
   });
 
-  const { data: playlists, isLoading: playlistsLoading } = useQuery({
+  const { data: playlists, isLoading: playlistsLoading } = useQuery<Playlist[]>({
     queryKey: ["/api/playlists"],
     enabled: !!user,
   });
 
-  const { data: recentPrompts } = useQuery({
+  const { data: recentPrompts } = useQuery<RecentPrompt[]>({
     queryKey: ["/api/recent-prompts"],
     enabled: !!user,
   });
@@ -82,7 +83,12 @@ export default function Home() {
     <div className="min-h-screen flex">
       <Sidebar playlists={playlists || []} recentPrompts={recentPrompts || []} />
       <main className="flex-1 ml-64 p-8">
-        <Header user={user} />
+        <Header
+          user={{
+            displayName: user.displayName,
+            imageUrl: user.imageUrl || undefined,
+          }}
+        />
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
           {/* Left Column - Main Content */}
           <div className="xl:col-span-2">
