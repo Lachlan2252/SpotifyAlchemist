@@ -71,7 +71,8 @@ npm install
    - `DATABASE_URL` – connection string to your PostgreSQL database
    - `SPOTIFY_CLIENT_ID` and `SPOTIFY_CLIENT_SECRET` – from the Spotify
      Developer Dashboard
-   - `SPOTIFY_REDIRECT_URI` – OAuth callback URL
+   - `SPOTIFY_REDIRECT_URI` – OAuth callback URL (must match exactly what you set
+     in the Spotify Developer Dashboard)
    - `OPENAI_API_KEY` – your OpenAI API key
    - `SESSION_SECRET` – any random string
 
@@ -97,6 +98,8 @@ Open <http://localhost:5000> in your browser and you should see Promptify.
 1. Go to [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
 2. Create a new app
 3. Add redirect URI: `http://localhost:5000/api/auth/spotify/callback`
+   - Use this exact value (or your deployed URL) in the `SPOTIFY_REDIRECT_URI`
+     setting in your `.env` file
 4. Copy your Client ID and Client Secret to your `.env` file
 
 ## Usage
