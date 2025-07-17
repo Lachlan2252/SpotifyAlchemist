@@ -35,12 +35,12 @@ export default function Sidebar({ playlists, recentPrompts }: SidebarProps) {
         <ul className="space-y-2">
           <li>
             <Link href="/">
-              <span className={`flex items-center py-2 px-4 rounded-lg font-medium transition-colors cursor-pointer ${
+              <div className={`flex items-center py-2 px-4 rounded-lg font-medium transition-colors cursor-pointer ${
                 location === "/" ? "spotify-gray text-white" : "text-gray-300 hover-spotify-gray hover:text-white"
               }`}>
                 <i className="fas fa-home w-5 mr-3"></i>
                 Home
-              </span>
+              </div>
             </Link>
           </li>
           <li>
