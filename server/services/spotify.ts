@@ -163,7 +163,7 @@ export class SpotifyService {
     return data.tracks;
   }
 
-  async getAudioFeatures(accessToken: string, trackIds: string[]): Promise<Record<string, any>> {
+  async getAudioFeaturesMap(accessToken: string, trackIds: string[]): Promise<Record<string, any>> {
     if (trackIds.length === 0) return {};
     const idChunks: string[][] = [];
     for (let i = 0; i < trackIds.length; i += 100) {
