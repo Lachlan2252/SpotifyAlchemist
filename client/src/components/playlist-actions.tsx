@@ -1,24 +1,57 @@
 import { Button } from "@/components/ui/button";
 import { type Playlist } from "@shared/schema";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 interface PlaylistActionsProps {
   currentPlaylist: Playlist & { tracks: any[] };
 }
 
 export default function PlaylistActions({ currentPlaylist }: PlaylistActionsProps) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const addSimilarSongs = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest(
+        "POST",
+        `/api/playlists/${currentPlaylist.id}/add-similar`
+      );
+      return res.json();
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(["/api/playlists", "current"], data.playlist);
+      toast({
+        title: "Added similar songs",
+        description: data.reasoning || "New tracks have been appended",
+      });
+    },
+    onError: (err: any) => {
+      toast({
+        title: "Failed to add songs",
+        description: err.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleAddSimilarSongs = () => {
-    // TODO: Implement add similar songs functionality
-    console.log("Add similar songs for playlist:", currentPlaylist.id);
+    addSimilarSongs.mutate();
   };
 
   const handleReplaceOverplayed = () => {
-    // TODO: Implement replace overplayed functionality
-    console.log("Replace overplayed songs for playlist:", currentPlaylist.id);
+    toast({
+      title: "Not implemented",
+      description: "Replace overplayed is coming soon",
+    });
   };
 
   const handleReorderByMood = () => {
-    // TODO: Implement reorder by mood functionality
-    console.log("Reorder by mood for playlist:", currentPlaylist.id);
+    toast({
+      title: "Not implemented",
+      description: "Reorder by mood is coming soon",
+    });
   };
 
   return (
