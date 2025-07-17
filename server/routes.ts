@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { spotifyService } from "./services/spotify";
 import { generatePlaylistFromPrompt, generateAdvancedPlaylistFromPrompt, modifyPlaylist } from "./services/openai";
 import { PlaylistEditor } from "./services/playlist-editor";
+import { ensureAuthenticated } from "./middleware";
 import { z } from "zod";
 
 // Extend express session to include userId
@@ -63,11 +64,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  app.get("/api/auth/me", async (req, res) => {
+  app.get("/api/auth/me", ensureAuthenticated, async (req, res) => {
     try {
-      if (!req.session.userId) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
 
       const user = await storage.getUser(req.session.userId);
       if (!user) {
@@ -90,11 +88,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     prompt: z.string().min(1).max(500),
   });
 
-  app.post("/api/playlists/generate", async (req, res) => {
+  app.post("/api/playlists/generate", ensureAuthenticated, async (req, res) => {
     try {
-      if (!req.session.userId) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
 
       const { prompt } = generatePlaylistSchema.parse(req.body);
       
@@ -166,11 +161,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/playlists/generate-advanced", async (req, res) => {
+  app.post("/api/playlists/generate-advanced", ensureAuthenticated, async (req, res) => {
     try {
-      if (!req.session.userId) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
 
       const config = req.body;
       
@@ -240,11 +232,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/playlists/:id/save-to-spotify", async (req, res) => {
+  app.post("/api/playlists/:id/save-to-spotify", ensureAuthenticated, async (req, res) => {
     try {
-      if (!req.session.userId) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
 
       const playlistId = parseInt(req.params.id);
       const user = await storage.getUser(req.session.userId);
@@ -281,11 +270,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/playlists", async (req, res) => {
+  app.get("/api/playlists", ensureAuthenticated, async (req, res) => {
     try {
-      if (!req.session.userId) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
 
       const playlists = await storage.getUserPlaylists(req.session.userId);
       res.json(playlists);
@@ -294,11 +280,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/playlists/:id", async (req, res) => {
+  app.get("/api/playlists/:id", ensureAuthenticated, async (req, res) => {
     try {
-      if (!req.session.userId) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
 
       const playlistId = parseInt(req.params.id);
       const playlist = await storage.getPlaylistWithTracks(playlistId);
@@ -313,11 +296,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/recent-prompts", async (req, res) => {
+  app.get("/api/recent-prompts", ensureAuthenticated, async (req, res) => {
     try {
-      if (!req.session.userId) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
 
       const prompts = await storage.getRecentPrompts(req.session.userId);
       res.json(prompts);
@@ -327,11 +307,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Spotify data endpoints
-  app.get("/api/spotify/playlists", async (req, res) => {
+  app.get("/api/spotify/playlists", ensureAuthenticated, async (req, res) => {
     try {
-      if (!req.session.userId) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
 
       const user = await storage.getUser(req.session.userId);
       if (!user) {
@@ -346,11 +323,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/spotify/recently-played", async (req, res) => {
+  app.get("/api/spotify/recently-played", ensureAuthenticated, async (req, res) => {
     try {
-      if (!req.session.userId) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
 
       const user = await storage.getUser(req.session.userId);
       if (!user) {
@@ -365,11 +339,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/spotify/playlist/:id/tracks", async (req, res) => {
+  app.get("/api/spotify/playlist/:id/tracks", ensureAuthenticated, async (req, res) => {
     try {
-      if (!req.session.userId) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
 
       const user = await storage.getUser(req.session.userId);
       if (!user) {
@@ -386,11 +357,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Playlist editing endpoint
-  app.post("/api/playlists/:id/edit", async (req, res) => {
+  app.post("/api/playlists/:id/edit", ensureAuthenticated, async (req, res) => {
     try {
-      if (!req.session.userId) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
 
       const { command, userPreferences } = req.body;
       const playlistId = parseInt(req.params.id);
