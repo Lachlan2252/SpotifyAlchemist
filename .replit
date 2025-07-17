@@ -26,7 +26,7 @@ externalPort = 3000
 PORT = "5000"
 
 [workflows]
-runButton = "Project"
+runButton = "Start application"
 
 [[workflows.workflow]]
 name = "Project"
@@ -35,20 +35,11 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Start application"
+args = "Dev Server"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Dev Server"
-
-[[workflows.workflow]]
-name = "Start application"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "node server/playlist-app-server.js"
-waitForPort = 5000
+args = "Start application"
 
 [[workflows.workflow]]
 name = "Dev Server"
@@ -58,6 +49,15 @@ author = "agent"
 task = "shell.exec"
 args = "cd /home/runner/workspace/client && npx vite --host 0.0.0.0 --port 5173"
 waitForPort = 5173
+
+[[workflows.workflow]]
+name = "Start application"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node start-app.js"
+waitForPort = 5000
 
 [objectStorage]
 defaultBucketID = "replit-objstore-2d28709c-1ced-43d5-a261-e964e6bc3138"
