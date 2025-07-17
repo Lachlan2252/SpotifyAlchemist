@@ -99,7 +99,7 @@ export class PlaylistEditor {
         filteredTracks = filteredTracks.filter(track => {
           const year = track.releaseDate
             ? new Date(track.releaseDate).getFullYear()
-            : 0;
+            : Number.MIN_SAFE_INTEGER;
           if (beforeYear && year < beforeYear) return false;
           if (afterYear && year > afterYear) return false;
           return true;
