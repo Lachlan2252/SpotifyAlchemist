@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { spotifyService } from "./services/spotify";
 import { generatePlaylistFromPrompt, generateAdvancedPlaylistFromPrompt, modifyPlaylist, get_playlist_criteria_from_prompt, assistantExplainFeatures, suggestPromptCompletions } from "./services/openai";
 import { PlaylistEditor } from "./services/playlist-editor";
-import { updateTrackSchema } from "@shared/schema";
+import { updateTrackSchema, type InsertUserPreferences } from "@shared/schema";
 import { z } from "zod";
 
 // Extend express session to include userId
@@ -86,6 +86,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/preferences", async (req, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const prefs = await storage.getUserPreferences(req.session.userId);
+      res.json(prefs || {});
+    } catch (error) {
+      res.status(500).json({ message: "Failed to load preferences" });
+    }
+  });
+
+  app.put("/api/preferences", async (req, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const prefs = req.body as InsertUserPreferences;
+      const updated = await storage.setUserPreferences(req.session.userId, prefs);
+      res.json(updated);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update preferences" });
+    }
+  });
+
   app.post("/api/assistant", async (req, res) => {
     try {
       const { message } = z.object({ message: z.string().min(1).max(500) }).parse(req.body);
@@ -126,12 +153,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
 
+      const userPrefs = await storage.getUserPreferences(user.id);
+
       const debug = req.query.debug === 'true';
 
       // Generate playlist metadata with OpenAI
       const playlistData = await generatePlaylistFromPrompt({
         prompt,
         userId: user.id,
+        preferences: userPrefs || undefined,
       });
       const criteria = await get_playlist_criteria_from_prompt(prompt);
 
@@ -239,14 +269,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const config = req.body;
-      
+
       const user = await storage.getUser(req.session.userId);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
 
+      const userPrefs = await storage.getUserPreferences(user.id);
+
       // Generate playlist with advanced configuration
-      const playlistData = await generateAdvancedPlaylistFromPrompt(config);
+      const playlistData = await generateAdvancedPlaylistFromPrompt(config, userPrefs || undefined);
 
       // Search for tracks using Spotify API with advanced filters
       const tracks: any[] = [];

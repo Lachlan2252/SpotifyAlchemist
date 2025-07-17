@@ -128,6 +128,17 @@ export const recentPrompts = pgTable("recent_prompts", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const userPreferences = pgTable("user_preferences", {
+  userId: integer("user_id").references(() => users.id).primaryKey(),
+  favoriteGenres: jsonb("favorite_genres"),
+  favoriteArtists: jsonb("favorite_artists"),
+  bannedTerms: jsonb("banned_terms"),
+  bannedArtists: jsonb("banned_artists"),
+  bannedGenres: jsonb("banned_genres"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
@@ -153,6 +164,12 @@ export const insertRecentPromptSchema = createInsertSchema(recentPrompts).omit({
   createdAt: true,
 });
 
+export const insertUserPreferencesSchema = createInsertSchema(userPreferences).omit({
+  userId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type Playlist = typeof playlists.$inferSelect;
@@ -162,6 +179,8 @@ export type InsertTrack = z.infer<typeof insertTrackSchema>;
 export type UpdateTrack = z.infer<typeof updateTrackSchema>;
 export type RecentPrompt = typeof recentPrompts.$inferSelect;
 export type InsertRecentPrompt = z.infer<typeof insertRecentPromptSchema>;
+export type UserPreferences = typeof userPreferences.$inferSelect;
+export type InsertUserPreferences = z.infer<typeof insertUserPreferencesSchema>;
 
 export interface PlaylistWithTracks extends Playlist {
   tracks: Track[];

@@ -64,3 +64,14 @@ export const promptApi = {
     return response.json();
   },
 };
+
+export const preferencesApi = {
+  async get() {
+    const res = await apiRequest("GET", "/api/preferences");
+    return res.json();
+  },
+  async update(data: any) {
+    const res = await apiRequest("PUT", "/api/preferences", data);
+    return res.json();
+  },
+};

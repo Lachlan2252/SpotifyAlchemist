@@ -1,4 +1,4 @@
-import { users, playlists, tracks, recentPrompts, type User, type InsertUser, type Playlist, type InsertPlaylist, type Track, type InsertTrack, type InsertRecentPrompt, type RecentPrompt } from "@shared/schema";
+import { users, playlists, tracks, recentPrompts, userPreferences, type User, type InsertUser, type Playlist, type InsertPlaylist, type Track, type InsertTrack, type InsertRecentPrompt, type RecentPrompt, type UserPreferences, type InsertUserPreferences } from "@shared/schema";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
 
@@ -15,6 +15,8 @@ export interface IStorage {
   removeTrackFromPlaylist(playlistId: number, trackId: number): Promise<void>;
   addRecentPrompt(prompt: InsertRecentPrompt): Promise<RecentPrompt>;
   getRecentPrompts(userId: number, limit?: number): Promise<RecentPrompt[]>;
+  getUserPreferences(userId: number): Promise<UserPreferences | undefined>;
+  setUserPreferences(userId: number, prefs: InsertUserPreferences): Promise<UserPreferences>;
 }
 
 
@@ -173,6 +175,31 @@ export class DatabaseStorage implements IStorage {
       .where(eq(recentPrompts.userId, userId))
       .orderBy(recentPrompts.createdAt)
       .limit(limit);
+  }
+
+  async getUserPreferences(userId: number): Promise<UserPreferences | undefined> {
+    const [prefs] = await db
+      .select()
+      .from(userPreferences)
+      .where(eq(userPreferences.userId, userId));
+    return prefs || undefined;
+  }
+
+  async setUserPreferences(userId: number, prefs: InsertUserPreferences): Promise<UserPreferences> {
+    const existing = await this.getUserPreferences(userId);
+    if (existing) {
+      const [updated] = await db
+        .update(userPreferences)
+        .set(prefs)
+        .where(eq(userPreferences.userId, userId))
+        .returning();
+      return updated;
+    }
+    const [created] = await db
+      .insert(userPreferences)
+      .values({ userId, ...prefs })
+      .returning();
+    return created;
   }
 }
 

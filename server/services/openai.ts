@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import { type UserPreferences } from "@shared/schema";
 
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 const apiKey = process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY_ENV_VAR;
@@ -45,6 +46,7 @@ function normalizePrompt(prompt: string): { text: string; mood?: string } {
 export interface PlaylistRequest {
   prompt: string;
   userId: number;
+  preferences?: UserPreferences | undefined;
   existingTracks?: string[];
 }
 
@@ -89,7 +91,10 @@ export interface PlaylistCriteria {
 export async function generatePlaylistFromPrompt(request: PlaylistRequest): Promise<PlaylistResponse> {
   try {
     const normalized = normalizePrompt(request.prompt);
+    const pref = request.preferences;
+    const prefDetails = pref ? `User preferences:\n- Favorite genres: ${((pref.favoriteGenres as string[] | undefined) || []).join(', ')}\n- Favorite artists: ${((pref.favoriteArtists as string[] | undefined) || []).join(', ')}\n- Avoid genres: ${((pref.bannedGenres as string[] | undefined) || []).join(', ')}\n- Avoid artists: ${((pref.bannedArtists as string[] | undefined) || []).join(', ')}\n- Banned terms: ${((pref.bannedTerms as string[] | undefined) || []).join(', ')}` : '';
     const systemPrompt = `You are a music expert AI that creates Spotify playlists based on natural language descriptions.
+    ${prefDetails}
     Given a prompt, generate a playlist with a name, description, and search queries for finding appropriate tracks.
     
     The user's prompt might describe:
@@ -262,10 +267,12 @@ export async function get_playlist_criteria_from_prompt(prompt: string): Promise
   }
 }
 
-export async function generateAdvancedPlaylistFromPrompt(config: any): Promise<any> {
+export async function generateAdvancedPlaylistFromPrompt(config: any, prefs?: UserPreferences): Promise<any> {
   try {
     // Build a comprehensive prompt incorporating all advanced features
+    const prefDetails = prefs ? `User preferences:\n- Favorite genres: ${((prefs.favoriteGenres as string[] | undefined) || []).join(', ')}\n- Favorite artists: ${((prefs.favoriteArtists as string[] | undefined) || []).join(', ')}\n- Avoid genres: ${((prefs.bannedGenres as string[] | undefined) || []).join(', ')}\n- Avoid artists: ${((prefs.bannedArtists as string[] | undefined) || []).join(', ')}\n- Banned terms: ${((prefs.bannedTerms as string[] | undefined) || []).join(', ')}` : '';
     let systemPrompt = `You are an expert AI music curator with deep knowledge of musical genres, artists, decades, and audio characteristics.
+    ${prefDetails}
     Generate a playlist based on the provided advanced configuration. Consider all parameters carefully.
 
     Your task is to create intelligent search queries that will find the perfect tracks for this playlist.
