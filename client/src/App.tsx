@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import MaximalistHome from "@/pages/maximalist-home";
 import NotFound from "@/pages/not-found";
+import AiAssistant from "@/components/ai-assistant";
 
 function Router() {
   return (
@@ -22,6 +23,7 @@ function App() {
         <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900 text-white">
           <Toaster />
           <Router />
+          <AiAssistant />
         </div>
       </TooltipProvider>
     </QueryClientProvider>
