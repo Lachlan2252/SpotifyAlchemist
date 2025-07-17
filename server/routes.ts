@@ -248,23 +248,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const f = featureMap[track.id];
         if (!f) continue;
 
-        if (f.tempo < recParams.min_tempo || f.tempo > recParams.max_tempo) { debug.rejected.push({ id: track.id, reason: 'tempo' }); continue; }
-        if (f.energy < recParams.min_energy || f.energy > recParams.max_energy) { debug.rejected.push({ id: track.id, reason: 'energy' }); continue; }
-        if (f.valence < recParams.min_valence || f.valence > recParams.max_valence) { debug.rejected.push({ id: track.id, reason: 'valence' }); continue; }
-        if (typeof track.popularity === 'number' && (track.popularity < recParams.min_popularity || track.popularity > recParams.max_popularity)) { debug.rejected.push({ id: track.id, reason: 'popularity' }); continue; }
-
-        const releaseYear = parseInt((track.album as any).release_date?.slice(0,4) || '0', 10);
-        if (config.yearRangeStart && releaseYear < config.yearRangeStart) { debug.rejected.push({ id: track.id, reason: 'year' }); continue; }
-        if (config.yearRangeEnd && releaseYear > config.yearRangeEnd) { debug.rejected.push({ id: track.id, reason: 'year' }); continue; }
-
-        const title = track.name.toLowerCase();
-        if (/live|remix|sped up|slowed/.test(title)) { debug.rejected.push({ id: track.id, reason: 'title' }); continue; }
-
-        if (config.languageSpecific) {
-          const lang = franc(`${track.name} ${track.artists[0]?.name || ''}`);
-          if (lang && lang !== 'und' && lang !== config.languageSpecific.slice(0,3).toLowerCase()) { debug.rejected.push({ id: track.id, reason: 'language' }); continue; }
-        }
-
+        if (shouldRejectTrack(track, f, recParams, config, debug)) continue;
         finalTracks.push(track);
       }
 
