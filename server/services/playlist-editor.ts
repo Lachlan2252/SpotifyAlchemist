@@ -17,6 +17,7 @@ interface PlaylistEditRequest {
   tracks: Track[];
   command: string;
   userPreferences?: UserPreferences;
+  accessToken?: string;
 }
 
 interface UserPreferences {
@@ -40,16 +41,16 @@ export class PlaylistEditor {
     changes: string[];
   }> {
     const command = await this.parseCommand(request.command);
-    
+
     switch (command.type) {
       case 'filter':
         return this.filterTracks(request.tracks, command, request.userPreferences);
       case 'transform':
-        return this.transformMood(request.tracks, command, request.userPreferences);
+        return this.transformMood(request.tracks, command, request.userPreferences, request.accessToken);
       case 'sort':
         return this.sortTracks(request.tracks, command);
       case 'expand':
-        return this.expandPlaylist(request.tracks, command, request.userPreferences);
+        return this.expandPlaylist(request.tracks, command, request.userPreferences, request.accessToken);
       case 'refine':
         return this.refineTracks(request.tracks, command, request.userPreferences);
       case 'theme':
@@ -200,7 +201,12 @@ export class PlaylistEditor {
     };
   }
 
-  private async transformMood(tracks: Track[], command: EditCommand, prefs?: UserPreferences): Promise<{
+  private async transformMood(
+    tracks: Track[],
+    command: EditCommand,
+    prefs?: UserPreferences,
+    accessToken?: string
+  ): Promise<{
     tracks: Track[];
     explanation: string;
     changes: string[];
@@ -221,16 +227,49 @@ export class PlaylistEditor {
     );
 
     const suggestions = JSON.parse(response);
-    
-    // For now, return the original tracks with the explanation
-    // In a full implementation, we'd search for and replace tracks
-    changes.push(`Analyzed playlist for mood transformation: ${command.parameters.target_mood}`);
-    changes.push(`Found ${suggestions.replacements?.length || 0} tracks that could be replaced`);
+
+    const updatedTracks = [...tracks];
+    if (Array.isArray(suggestions.replacements)) {
+      for (const rep of suggestions.replacements) {
+        const index = updatedTracks.findIndex(t =>
+          t.name.toLowerCase().includes(String(rep.original).toLowerCase())
+        );
+        if (index !== -1 && accessToken) {
+          try {
+            const query = `${rep.replacement} ${rep.artist || ''}`.trim();
+            const results = await this.spotify.searchTracks(accessToken, query, 1);
+            const found = results[0];
+            if (found) {
+              updatedTracks[index] = {
+                ...updatedTracks[index],
+                spotifyId: found.id,
+                name: found.name,
+                artist: found.artists[0]?.name || updatedTracks[index].artist,
+                album: found.album.name,
+                duration: found.duration_ms,
+                imageUrl: found.album.images[0]?.url || updatedTracks[index].imageUrl,
+                previewUrl: found.preview_url,
+              } as Track;
+              changes.push(
+                `Replaced ${rep.original} with ${found.name}` +
+                  (rep.reason ? ` (${rep.reason})` : '')
+              );
+            }
+          } catch (err) {
+            console.error('Spotify search failed', err);
+          }
+        }
+      }
+    }
+
+    changes.push(
+      `Analyzed playlist for mood transformation: ${command.parameters.target_mood}`
+    );
 
     return {
-      tracks,
+      tracks: updatedTracks,
       explanation: `Transformed playlist mood to: ${command.parameters.target_mood}`,
-      changes
+      changes,
     };
   }
 
@@ -296,22 +335,72 @@ export class PlaylistEditor {
     };
   }
 
-  private async expandPlaylist(tracks: Track[], command: EditCommand, prefs?: UserPreferences): Promise<{
+  private async expandPlaylist(
+    tracks: Track[],
+    command: EditCommand,
+    prefs?: UserPreferences,
+    accessToken?: string
+  ): Promise<{
     tracks: Track[];
     explanation: string;
     changes: string[];
   }> {
     const changes: string[] = [];
-    
-    // For now, return original tracks with explanation
-    // In full implementation, we'd search for similar tracks
-    changes.push(`Analyzed playlist for expansion: ${command.parameters.expansion_type}`);
-    changes.push(`Target size: ${command.parameters.target_size || tracks.length * 2} tracks`);
+
+    const expansionType = command.parameters.expansion_type || 'similar';
+    const targetSize = command.parameters.target_size || tracks.length * 2;
+
+    const expandPrompt = `Add more songs that fit this playlist.\n` +
+      `Current tracks: ${tracks.map(t => `${t.name} by ${t.artist}`).join(', ')}\n` +
+      `Type: ${expansionType}. Return JSON {"queries": ["q1", "q2", ...]}`;
+
+    const response = await generateCompletion(
+      'You are a music expert expanding playlists.',
+      expandPrompt
+    );
+
+    const suggestions = JSON.parse(response);
+    const queries: string[] = suggestions.queries || [];
+
+    const newTracks: Track[] = [];
+    const existingIds = new Set(tracks.map(t => t.spotifyId));
+
+    if (accessToken) {
+      for (const q of queries) {
+        try {
+          const results = await this.spotify.searchTracks(accessToken, q, 5);
+          for (const tr of results) {
+            if (!existingIds.has(tr.id)) {
+              const template: Partial<Track> = tracks[0] || {} as any;
+              newTracks.push({
+                ...template,
+                spotifyId: tr.id,
+                name: tr.name,
+                artist: tr.artists[0]?.name || 'Unknown Artist',
+                album: tr.album.name,
+                duration: tr.duration_ms,
+                imageUrl: tr.album.images[0]?.url || null,
+                previewUrl: tr.preview_url,
+                position: tracks.length + newTracks.length,
+              } as Track);
+              existingIds.add(tr.id);
+              if (tracks.length + newTracks.length >= targetSize) break;
+            }
+          }
+        } catch (err) {
+          console.error('Spotify search failed', err);
+        }
+        if (tracks.length + newTracks.length >= targetSize) break;
+      }
+    }
+
+    changes.push(`Analyzed playlist for expansion: ${expansionType}`);
+    changes.push(`Added ${newTracks.length} tracks`);
 
     return {
-      tracks,
-      explanation: `Expanded playlist with ${command.parameters.expansion_type} tracks`,
-      changes
+      tracks: [...tracks, ...newTracks],
+      explanation: `Expanded playlist with ${expansionType} tracks`,
+      changes,
     };
   }
 

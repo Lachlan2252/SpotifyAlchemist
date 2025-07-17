@@ -507,10 +507,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Not authorized to edit this playlist" });
       }
 
+      const user = await storage.getUser(req.session.userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
       const result = await playlistEditor.processCommand({
         tracks: playlist.tracks,
         command,
-        userPreferences
+        userPreferences,
+        accessToken: user.accessToken
       });
 
       // Update playlist metadata
