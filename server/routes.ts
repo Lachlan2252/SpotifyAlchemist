@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { spotifyService } from "./services/spotify";
-import { generatePlaylistFromPrompt, generateAdvancedPlaylistFromPrompt, modifyPlaylist, get_playlist_criteria_from_prompt } from "./services/openai";
+import { generatePlaylistFromPrompt, generateAdvancedPlaylistFromPrompt, modifyPlaylist, get_playlist_criteria_from_prompt, assistantExplainFeatures } from "./services/openai";
 import { PlaylistEditor } from "./services/playlist-editor";
 import { updateTrackSchema } from "@shared/schema";
 import { z } from "zod";
@@ -83,6 +83,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       res.status(500).json({ message: "Failed to get user profile" });
+    }
+  });
+
+  app.post("/api/assistant", async (req, res) => {
+    try {
+      const { message } = z.object({ message: z.string().min(1).max(500) }).parse(req.body);
+      const reply = await assistantExplainFeatures(message);
+      res.json({ response: reply });
+    } catch (error) {
+      console.error("Assistant error:", error);
+      res.status(500).json({ message: "Failed to generate assistant response" });
     }
   });
 

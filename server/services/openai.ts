@@ -293,3 +293,16 @@ If segmented mode is enabled, create distinct sections with different characteri
     throw new Error("Failed to generate advanced playlist: " + (error as Error).message);
   }
 }
+
+export async function assistantExplainFeatures(question: string): Promise<string> {
+  const systemPrompt = `You are the Promptify AI assistant. Explain how to use the application's features in clear, concise language. Help users understand the interface and available options.`;
+  const response = await openai.chat.completions.create({
+    model: "gpt-4o",
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: question }
+    ],
+    temperature: 0.7,
+  });
+  return response.choices[0].message.content || "";
+}
