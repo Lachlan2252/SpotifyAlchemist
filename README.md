@@ -72,7 +72,7 @@ npm install
    - `SPOTIFY_CLIENT_ID` and `SPOTIFY_CLIENT_SECRET` – from the Spotify
      Developer Dashboard
    - `SPOTIFY_REDIRECT_URI` – OAuth callback URL
-   - `OPENAI_API_KEY` – your OpenAI API key
+   - Either `OPENAI_API_KEY` or `OPENAI_API_KEY_ENV_VAR` must provide your OpenAI API key (the app will fail to start if neither is set)
    - `SESSION_SECRET` – any random string
 
 ### 4. Database Setup
