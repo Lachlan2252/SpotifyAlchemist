@@ -11,6 +11,7 @@ export interface IStorage {
   getUserPlaylists(userId: number): Promise<Playlist[]>;
   updatePlaylist(id: number, updates: Partial<InsertPlaylist>): Promise<void>;
   addTrackToPlaylist(track: InsertTrack): Promise<Track>;
+  updateTrack(id: number, updates: Partial<InsertTrack>): Promise<void>;
   removeTrackFromPlaylist(playlistId: number, trackId: number): Promise<void>;
   addRecentPrompt(prompt: InsertRecentPrompt): Promise<RecentPrompt>;
   getRecentPrompts(userId: number, limit?: number): Promise<RecentPrompt[]>;
@@ -139,6 +140,13 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return track;
+  }
+
+  async updateTrack(id: number, updates: Partial<InsertTrack>): Promise<void> {
+    await db
+      .update(tracks)
+      .set(updates)
+      .where(eq(tracks.id, id));
   }
 
   async removeTrackFromPlaylist(playlistId: number, trackId: number): Promise<void> {

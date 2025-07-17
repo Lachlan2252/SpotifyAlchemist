@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { spotifyService } from "./services/spotify";
 import { generatePlaylistFromPrompt, generateAdvancedPlaylistFromPrompt, modifyPlaylist } from "./services/openai";
 import { PlaylistEditor } from "./services/playlist-editor";
+import { updateTrackSchema } from "@shared/schema";
 import { z } from "zod";
 
 // Extend express session to include userId
@@ -434,6 +435,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Playlist edit error:", error);
       res.status(500).json({ message: "Failed to edit playlist" });
+    }
+  });
+
+  app.put("/api/playlists/:id/tracks", async (req, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const playlistId = parseInt(req.params.id);
+      const { tracks } = req.body as { tracks: unknown[] };
+
+      if (!Array.isArray(tracks)) {
+        return res.status(400).json({ message: "Tracks must be an array" });
+      }
+
+      const playlist = await storage.getPlaylistWithTracks(playlistId);
+      if (!playlist || playlist.userId !== req.session.userId) {
+        return res.status(404).json({ message: "Playlist not found" });
+      }
+
+      for (const trackData of tracks) {
+        const parsed = updateTrackSchema.parse(trackData);
+        const { id, ...updates } = parsed;
+        await storage.updateTrack(id, updates);
+      }
+
+      const updatedPlaylist = await storage.getPlaylistWithTracks(playlistId);
+      res.json(updatedPlaylist);
+    } catch (error) {
+      console.error("Update playlist tracks error:", error);
+      res.status(500).json({ message: "Failed to update playlist tracks" });
+    }
+  });
+
+  app.post("/api/playlists/:id/audio-features", async (req, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const playlistId = parseInt(req.params.id);
+      const playlist = await storage.getPlaylistWithTracks(playlistId);
+      if (!playlist || playlist.userId !== req.session.userId) {
+        return res.status(404).json({ message: "Playlist not found" });
+      }
+
+      const user = await storage.getUser(req.session.userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const chunks = [] as string[][];
+      for (let i = 0; i < playlist.tracks.length; i += 100) {
+        chunks.push(playlist.tracks.slice(i, i + 100).map(t => t.spotifyId));
+      }
+
+      for (const chunk of chunks) {
+        const features = await spotifyService.getAudioFeatures(user.accessToken, chunk);
+        for (const feat of features) {
+          if (!feat) continue;
+          const track = playlist.tracks.find(t => t.spotifyId === feat.id);
+          if (!track) continue;
+          await storage.updateTrack(track.id, {
+            energy: feat.energy,
+            danceability: feat.danceability,
+            acousticness: feat.acousticness,
+            instrumentalness: feat.instrumentalness,
+            liveness: feat.liveness,
+            speechiness: feat.speechiness,
+            valence: feat.valence,
+            tempo: feat.tempo,
+            audioKey: feat.key,
+            musicalMode: feat.mode,
+            loudness: feat.loudness,
+          });
+        }
+      }
+
+      const updatedPlaylist = await storage.getPlaylistWithTracks(playlistId);
+      res.json(updatedPlaylist);
+    } catch (error) {
+      console.error("Get audio features error:", error);
+      res.status(500).json({ message: "Failed to load audio features" });
     }
   });
 

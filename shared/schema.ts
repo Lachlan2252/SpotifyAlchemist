@@ -144,6 +144,10 @@ export const insertTrackSchema = createInsertSchema(tracks).omit({
   createdAt: true,
 });
 
+export const updateTrackSchema = insertTrackSchema.partial().extend({
+  id: z.number(),
+});
+
 export const insertRecentPromptSchema = createInsertSchema(recentPrompts).omit({
   id: true,
   createdAt: true,
@@ -155,5 +159,6 @@ export type Playlist = typeof playlists.$inferSelect;
 export type InsertPlaylist = z.infer<typeof insertPlaylistSchema>;
 export type Track = typeof tracks.$inferSelect;
 export type InsertTrack = z.infer<typeof insertTrackSchema>;
+export type UpdateTrack = z.infer<typeof updateTrackSchema>;
 export type RecentPrompt = typeof recentPrompts.$inferSelect;
 export type InsertRecentPrompt = z.infer<typeof insertRecentPromptSchema>;
