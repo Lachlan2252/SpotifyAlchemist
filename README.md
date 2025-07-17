@@ -94,6 +94,14 @@ OPENAI_API_KEY=your_openai_api_key
 - `npm run build` - Build for production
 - `npm run db:push` - Push database schema changes
 - `npm run db:studio` - Open database studio
+- `npm run electron:dev` - Start the desktop app in development
+- `npm run electron:pack` - Build a macOS app bundle (requires macOS)
+## Mac Desktop App
+
+Use Electron to run Promptify as a native macOS application.
+
+1. `npm run electron:dev` to launch the app with the dev server.
+2. `npm run electron:pack` to create a macOS app bundle (requires macOS).
 
 ## Contributing
 
