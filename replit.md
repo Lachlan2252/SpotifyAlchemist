@@ -51,10 +51,12 @@ Preferred communication style: Simple, everyday language.
 - **User Profile**: Access to user's Spotify profile and preferences
 
 ### Data Management
+- **Database**: PostgreSQL with Neon serverless hosting
 - **Database Schema**: Users, playlists, tracks, and recent prompts tables
 - **ORM**: Drizzle ORM with PostgreSQL dialect
 - **Type Safety**: Zod schemas for validation and TypeScript integration
 - **Migrations**: Database schema versioning with Drizzle Kit
+- **Storage**: DatabaseStorage class implements full CRUD operations
 
 ## Data Flow
 
