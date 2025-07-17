@@ -1,0 +1,255 @@
+import type { Express } from "express";
+import { createServer, type Server } from "http";
+import { storage } from "./storage";
+import { spotifyService } from "./services/spotify";
+import { generatePlaylistFromPrompt, modifyPlaylist } from "./services/openai";
+import { z } from "zod";
+
+// Extend express session to include userId
+declare module "express-session" {
+  interface SessionData {
+    userId?: number;
+  }
+}
+
+export async function registerRoutes(app: Express): Promise<Server> {
+  // Spotify OAuth routes
+  app.get("/api/auth/spotify", async (req, res) => {
+    try {
+      const authUrl = spotifyService.getAuthUrl();
+      res.redirect(authUrl);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to initiate Spotify authentication" });
+    }
+  });
+
+  app.get("/api/auth/spotify/callback", async (req, res) => {
+    try {
+      const { code } = req.query;
+      if (!code) {
+        return res.status(400).json({ message: "Authorization code not provided" });
+      }
+
+      const tokens = await spotifyService.exchangeCodeForTokens(code as string);
+      const userProfile = await spotifyService.getUserProfile(tokens.access_token);
+
+      const userData = {
+        spotifyId: userProfile.id,
+        displayName: userProfile.display_name,
+        email: userProfile.email,
+        imageUrl: userProfile.images[0]?.url || null,
+        accessToken: tokens.access_token,
+        refreshToken: tokens.refresh_token,
+        tokenExpiresAt: new Date(Date.now() + tokens.expires_in * 1000),
+      };
+
+      const user = await storage.createOrUpdateUser(userData);
+      
+      // Set session
+      req.session.userId = user.id;
+      
+      res.redirect("/?auth=success");
+    } catch (error) {
+      console.error("Spotify auth error:", error);
+      res.redirect("/?auth=error");
+    }
+  });
+
+  app.get("/api/auth/logout", (req, res) => {
+    req.session.destroy(() => {
+      res.json({ message: "Logged out successfully" });
+    });
+  });
+
+  app.get("/api/auth/me", async (req, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const user = await storage.getUser(req.session.userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json({
+        id: user.id,
+        displayName: user.displayName,
+        email: user.email,
+        imageUrl: user.imageUrl,
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get user profile" });
+    }
+  });
+
+  // Playlist generation routes
+  const generatePlaylistSchema = z.object({
+    prompt: z.string().min(1).max(500),
+  });
+
+  app.post("/api/playlists/generate", async (req, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const { prompt } = generatePlaylistSchema.parse(req.body);
+      
+      const user = await storage.getUser(req.session.userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Generate playlist metadata with OpenAI
+      const playlistData = await generatePlaylistFromPrompt({
+        prompt,
+        userId: user.id,
+      });
+
+      // Search for tracks using Spotify API
+      const tracks: any[] = [];
+      for (const query of playlistData.searchQueries) {
+        try {
+          const searchResults = await spotifyService.searchTracks(user.accessToken, query, 3);
+          tracks.push(...searchResults);
+        } catch (error) {
+          console.error(`Search failed for query: ${query}`, error);
+        }
+      }
+
+      // Remove duplicates and limit to 25 tracks
+      const uniqueTracks = tracks.filter((track, index, self) => 
+        index === self.findIndex(t => t.id === track.id)
+      ).slice(0, 25);
+
+      // Create playlist in database
+      const playlist = await storage.createPlaylist({
+        userId: user.id,
+        name: playlistData.name,
+        description: playlistData.description,
+        prompt,
+        trackCount: uniqueTracks.length,
+        isPublic: false,
+      });
+
+      // Add tracks to database
+      for (let i = 0; i < uniqueTracks.length; i++) {
+        const track = uniqueTracks[i];
+        await storage.addTrackToPlaylist({
+          playlistId: playlist.id,
+          spotifyId: track.id,
+          name: track.name,
+          artist: track.artists[0]?.name || "Unknown Artist",
+          album: track.album.name,
+          duration: track.duration_ms,
+          imageUrl: track.album.images[0]?.url || null,
+          previewUrl: track.preview_url,
+          position: i,
+        });
+      }
+
+      // Save recent prompt
+      await storage.addRecentPrompt({
+        userId: user.id,
+        prompt,
+        playlistId: playlist.id,
+      });
+
+      const fullPlaylist = await storage.getPlaylistWithTracks(playlist.id);
+      res.json(fullPlaylist);
+    } catch (error) {
+      console.error("Generate playlist error:", error);
+      res.status(500).json({ message: "Failed to generate playlist" });
+    }
+  });
+
+  app.post("/api/playlists/:id/save-to-spotify", async (req, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const playlistId = parseInt(req.params.id);
+      const user = await storage.getUser(req.session.userId);
+      const playlist = await storage.getPlaylistWithTracks(playlistId);
+
+      if (!user || !playlist || playlist.userId !== user.id) {
+        return res.status(404).json({ message: "Playlist not found" });
+      }
+
+      // Create playlist on Spotify
+      const spotifyPlaylist = await spotifyService.createPlaylist(
+        user.accessToken,
+        user.spotifyId,
+        playlist.name,
+        playlist.description || ""
+      );
+
+      // Add tracks to Spotify playlist
+      if (playlist.tracks.length > 0) {
+        const trackUris = playlist.tracks.map(track => `spotify:track:${track.spotifyId}`);
+        await spotifyService.addTracksToPlaylist(user.accessToken, spotifyPlaylist.id, trackUris);
+      }
+
+      // Update playlist with Spotify ID
+      await storage.updatePlaylist(playlistId, {
+        spotifyId: spotifyPlaylist.id,
+        imageUrl: spotifyPlaylist.images[0]?.url || null,
+      });
+
+      res.json({ message: "Playlist saved to Spotify successfully", spotifyId: spotifyPlaylist.id });
+    } catch (error) {
+      console.error("Save to Spotify error:", error);
+      res.status(500).json({ message: "Failed to save playlist to Spotify" });
+    }
+  });
+
+  app.get("/api/playlists", async (req, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const playlists = await storage.getUserPlaylists(req.session.userId);
+      res.json(playlists);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get playlists" });
+    }
+  });
+
+  app.get("/api/playlists/:id", async (req, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const playlistId = parseInt(req.params.id);
+      const playlist = await storage.getPlaylistWithTracks(playlistId);
+
+      if (!playlist || playlist.userId !== req.session.userId) {
+        return res.status(404).json({ message: "Playlist not found" });
+      }
+
+      res.json(playlist);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get playlist" });
+    }
+  });
+
+  app.get("/api/recent-prompts", async (req, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const prompts = await storage.getRecentPrompts(req.session.userId);
+      res.json(prompts);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get recent prompts" });
+    }
+  });
+
+  const httpServer = createServer(app);
+  return httpServer;
+}
