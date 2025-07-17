@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["node", "jest"],
+    "moduleResolution": "node"
+  },
+  "include": ["server/**/*", "shared/**/*"],
+  "exclude": []
+}
