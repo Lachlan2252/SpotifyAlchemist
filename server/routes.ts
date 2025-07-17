@@ -23,7 +23,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/auth/spotify/callback", async (req, res) => {
+  app.get("/callback", async (req, res) => {
     try {
       const { code } = req.query;
       if (!code) {

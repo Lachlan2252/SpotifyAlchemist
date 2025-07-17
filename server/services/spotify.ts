@@ -38,11 +38,8 @@ export class SpotifyService {
   constructor() {
     this.clientId = process.env.SPOTIFY_CLIENT_ID || "";
     this.clientSecret = process.env.SPOTIFY_CLIENT_SECRET || "";
-    // For Replit deployment, use the replit domain
-    const replitDomain = process.env.REPLIT_DOMAINS?.split(',')[0];
-    this.redirectUri = replitDomain 
-      ? `https://${replitDomain}/api/auth/spotify/callback`
-      : 'http://localhost:5000/api/auth/spotify/callback';
+    // Use the exact redirect URI from your Spotify app settings
+    this.redirectUri = "https://40b819fa-7b5c-4452-9a74-ed7a3167e37d-00-9g1xwfbar0b6.picard.replit.dev/callback";
   }
 
   getAuthUrl(): string {
