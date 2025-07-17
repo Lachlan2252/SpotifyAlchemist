@@ -48,6 +48,70 @@ export interface PlaylistCriteria {
   };
 }
 
+export interface PlaylistConfig {
+  // Basic
+  prompt: string;
+  name: string;
+  description: string;
+
+  // Vibe & Theme
+  vibe: string;
+  mood: string;
+  scene: string;
+  energyScale: number;
+  darknessScale: number;
+  emotionalTone: string;
+
+  // Audio Features
+  targetEnergy: number;
+  targetDanceability: number;
+  targetAcousticness: number;
+  targetInstrumentalness: number;
+  targetLiveness: number;
+  targetSpeechiness: number;
+  targetValence: number;
+  targetTempo: number;
+  audioKey: string;
+  musicalMode: string;
+
+  // Time & Era
+  decadeFilter: string[];
+  yearRangeStart: number;
+  yearRangeEnd: number;
+  onlyNewMusic: boolean;
+  onlyThrowbacks: boolean;
+  mixedEra: boolean;
+
+  // Artist/Track/Genre
+  seedArtists: string[];
+  seedGenres: string[];
+  includeSpecificTracks: string[];
+  excludeArtists: string[];
+  excludeGenres: string[];
+  excludeTracks: string[];
+  avoidOverplayed: boolean;
+  onlyUnderground: boolean;
+  popularityThreshold: number;
+
+  // Structure
+  targetTrackCount: number;
+  targetDurationMin: number;
+  targetDurationMax: number;
+  storyArcMode: boolean;
+  segmentedMode: boolean;
+
+  // Style & Customization
+  styleFusion: string[];
+  randomnessLevel: number;
+  balanceHitsGems: number;
+  explicitLyrics: string;
+  smartLyrics: boolean;
+  languageSpecific: string;
+
+  // Template
+  templateUsed: string;
+}
+
 export async function generatePlaylistFromPrompt(request: PlaylistRequest): Promise<PlaylistResponse> {
   try {
     const systemPrompt = `You are a music expert AI that creates Spotify playlists based on natural language descriptions. 
@@ -219,7 +283,7 @@ export async function get_playlist_criteria_from_prompt(prompt: string): Promise
   }
 }
 
-export async function generateAdvancedPlaylistFromPrompt(config: any): Promise<any> {
+export async function generateAdvancedPlaylistFromPrompt(config: PlaylistConfig): Promise<any> {
   try {
     // Build a comprehensive prompt incorporating all advanced features
     let systemPrompt = `You are an expert AI music curator with deep knowledge of musical genres, artists, decades, and audio characteristics. 

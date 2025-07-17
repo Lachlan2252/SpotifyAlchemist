@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { spotifyService } from "./services/spotify";
-import { generatePlaylistFromPrompt, generateAdvancedPlaylistFromPrompt, modifyPlaylist } from "./services/openai";
+import { generatePlaylistFromPrompt, generateAdvancedPlaylistFromPrompt, modifyPlaylist, PlaylistConfig } from "./services/openai";
 import { PlaylistEditor } from "./services/playlist-editor";
 import { z } from "zod";
 
@@ -172,7 +172,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Not authenticated" });
       }
 
-      const config = req.body;
+      const config = req.body as PlaylistConfig;
       
       const user = await storage.getUser(req.session.userId);
       if (!user) {
