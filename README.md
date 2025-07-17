@@ -10,6 +10,11 @@ An intelligent playlist generation tool that creates custom Spotify playlists us
 - **Smart Curation**: Intelligent track selection based on context and preferences
 - **Modern UI**: Clean, responsive interface with Spotify-inspired design
 - **Real-time Processing**: Fast playlist generation with live progress updates
+- **Follow-up Prompts**: Refine an existing playlist using additional prompts
+- **Emoji Mood Detection**: Prompts containing emojis automatically set the vibe
+- **Synonym Support**: Words like "hype" or "banger" imply high energy
+- **Cover Art Suggestions**: GPT proposes ideas for playlist artwork
+- **Export Tools**: Download playlists as JSON, CSV, or plain text
 
 ## Tech Stack
 
