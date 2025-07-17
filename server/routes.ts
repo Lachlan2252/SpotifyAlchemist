@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { spotifyService } from "./services/spotify";
+import { parsePromptFilters } from "./utils/prompt";
 import { generatePlaylistFromPrompt, generateAdvancedPlaylistFromPrompt, modifyPlaylist, get_playlist_criteria_from_prompt, assistantExplainFeatures, suggestPromptCompletions } from "./services/openai";
 import { PlaylistEditor } from "./services/playlist-editor";
 import { updateTrackSchema, type InsertUserPreferences } from "@shared/schema";
