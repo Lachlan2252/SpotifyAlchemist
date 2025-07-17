@@ -63,6 +63,28 @@ export default function PlaylistDisplay() {
     },
   });
 
+  const generateCover = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await apiRequest("POST", `/api/playlists/${id}/generate-cover`);
+      return res.json();
+    },
+    onSuccess: (data) => {
+      if (currentPlaylist) {
+        const updated = { ...currentPlaylist, imageUrl: data.imageUrl };
+        setPlaylistState(updated);
+        queryClient.setQueryData(["/api/playlists", "current"], updated);
+      }
+      toast({ title: "Cover generated!" });
+    },
+    onError: (err: any) => {
+      toast({
+        title: "Failed to generate cover",
+        description: err.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   if (isLoading) {
     return (
       <div className="spotify-gray rounded-xl p-6 mb-8">
@@ -117,6 +139,13 @@ export default function PlaylistDisplay() {
               className="spotify-lightgray hover-spotify-gray text-white p-2 rounded-full transition-colors"
             >
               <i className="fas fa-redo"></i>
+            </Button>
+            <Button
+              onClick={() => generateCover.mutate(currentPlaylist.id)}
+              disabled={generateCover.isPending}
+              className="spotify-lightgray hover-spotify-gray text-white p-2 rounded-full transition-colors"
+            >
+              <i className="fas fa-image"></i>
             </Button>
           </div>
         </div>

@@ -354,3 +354,20 @@ export async function assistantExplainFeatures(question: string): Promise<string
   });
   return response.choices[0].message.content || "";
 }
+
+export async function generateCoverImage(prompt: string): Promise<string> {
+  try {
+    const result = await openai.images.generate({
+      model: "dall-e-3",
+      prompt,
+      n: 1,
+      size: "1024x1024",
+    });
+    const url = result.data?.[0]?.url;
+    if (!url) throw new Error("No image URL returned");
+    return url;
+  } catch (error) {
+    console.error("OpenAI image generation error:", error);
+    throw new Error("Failed to generate cover image: " + (error as Error).message);
+  }
+}

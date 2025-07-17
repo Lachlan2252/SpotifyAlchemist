@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { spotifyService } from "./services/spotify";
-import { generatePlaylistFromPrompt, generateAdvancedPlaylistFromPrompt, modifyPlaylist, get_playlist_criteria_from_prompt, assistantExplainFeatures } from "./services/openai";
+import { generatePlaylistFromPrompt, generateAdvancedPlaylistFromPrompt, modifyPlaylist, get_playlist_criteria_from_prompt, assistantExplainFeatures, generateCoverImage } from "./services/openai";
 import { PlaylistEditor } from "./services/playlist-editor";
 import { updateTrackSchema } from "@shared/schema";
 import { z } from "zod";
@@ -182,6 +182,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         name: playlistData.name,
         description: playlistData.description,
         prompt,
+        coverArtPrompt: playlistData.coverArtPrompt,
         trackCount: finalTracks.length,
         isPublic: false,
       });
@@ -259,6 +260,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         name: config.name || playlistData.name,
         description: config.description || playlistData.description,
         prompt: config.prompt,
+        coverArtPrompt: playlistData.coverArtPrompt,
         trackCount: uniqueTracks.length,
         isPublic: false,
         ...config, // Include all advanced configuration
@@ -333,6 +335,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Save to Spotify error:", error);
       res.status(500).json({ message: "Failed to save playlist to Spotify" });
+    }
+  });
+
+  app.post("/api/playlists/:id/generate-cover", async (req, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const playlistId = parseInt(req.params.id);
+      const playlist = await storage.getPlaylist(playlistId);
+      if (!playlist || playlist.userId !== req.session.userId) {
+        return res.status(404).json({ message: "Playlist not found" });
+      }
+
+      const prompt = playlist.coverArtPrompt || playlist.prompt;
+      if (!prompt) {
+        return res.status(400).json({ message: "No cover art prompt available" });
+      }
+
+      const url = await generateCoverImage(prompt);
+      await storage.updatePlaylist(playlistId, { imageUrl: url });
+
+      res.json({ imageUrl: url });
+    } catch (error) {
+      console.error("Generate cover error:", error);
+      res.status(500).json({ message: "Failed to generate playlist cover" });
     }
   });
 

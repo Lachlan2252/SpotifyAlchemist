@@ -21,6 +21,7 @@ export const playlists = pgTable("playlists", {
   name: text("name").notNull(),
   description: text("description"),
   prompt: text("prompt").notNull(),
+  coverArtPrompt: text("cover_art_prompt"),
   imageUrl: text("image_url"),
   trackCount: integer("track_count").default(0),
   isPublic: boolean("is_public").default(false),
