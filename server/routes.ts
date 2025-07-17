@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { spotifyService } from "./services/spotify";
-import { generatePlaylistFromPrompt, generateAdvancedPlaylistFromPrompt, modifyPlaylist } from "./services/openai";
+import { generatePlaylistFromPrompt, generateAdvancedPlaylistFromPrompt, modifyPlaylist, get_playlist_criteria_from_prompt } from "./services/openai";
 import { PlaylistEditor } from "./services/playlist-editor";
 import { z } from "zod";
 
@@ -103,11 +103,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
 
+      const debug = req.query.debug === 'true';
+
       // Generate playlist metadata with OpenAI
       const playlistData = await generatePlaylistFromPrompt({
         prompt,
         userId: user.id,
       });
+      const criteria = await get_playlist_criteria_from_prompt(prompt);
 
       // Search for tracks using Spotify API
       const tracks: any[] = [];
@@ -120,10 +123,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // Remove duplicates and limit to 25 tracks
-      const uniqueTracks = tracks.filter((track, index, self) => 
-        index === self.findIndex(t => t.id === track.id)
-      ).slice(0, 25);
+      try {
+        const recs = await spotifyService.getRecommendations(user.accessToken, {
+          seed_artists: criteria.seed_artists.join(','),
+          seed_genres: criteria.seed_genres.join(','),
+          limit: 50,
+          target_energy: criteria.audio_features.target_energy,
+          target_danceability: criteria.audio_features.target_danceability,
+          target_valence: criteria.audio_features.target_valence,
+          target_tempo: criteria.audio_features.target_tempo,
+        });
+        tracks.push(...recs);
+      } catch (err) {
+        console.error('Recommendation fetch failed', err);
+      }
+
+      // Remove duplicates
+      const deduped = tracks.filter((t, i, self) => i === self.findIndex(x => x.id === t.id));
+
+      // Validate audio features
+      const features = await spotifyService.getAudioFeatures(user.accessToken, deduped.map(t => t.id));
+      const filtered = deduped.filter(t => {
+        const af = features[t.id];
+        if (!af) return true;
+        if (Math.abs(af.energy - criteria.audio_features.target_energy) > 0.3) return false;
+        if (Math.abs(af.valence - criteria.audio_features.target_valence) > 0.4) return false;
+        if (Math.abs(af.danceability - criteria.audio_features.target_danceability) > 0.3) return false;
+        if (Math.abs(af.tempo - criteria.audio_features.target_tempo) > 20) return false;
+        const name = t.name.toLowerCase();
+        if (/(remix|remaster|live|sped|edit)/.test(name)) return false;
+        return true;
+      }).slice(0, 25);
+
+      const debugInfo = debug ? {
+        criteria,
+        initial: tracks.length,
+        afterDedup: deduped.length,
+        afterFiltering: filtered.length,
+      } : undefined;
+
+      const finalTracks = filtered;
 
       // Create playlist in database
       const playlist = await storage.createPlaylist({
@@ -131,13 +170,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         name: playlistData.name,
         description: playlistData.description,
         prompt,
-        trackCount: uniqueTracks.length,
+        trackCount: finalTracks.length,
         isPublic: false,
       });
 
       // Add tracks to database
-      for (let i = 0; i < uniqueTracks.length; i++) {
-        const track = uniqueTracks[i];
+      for (let i = 0; i < finalTracks.length; i++) {
+        const track = finalTracks[i];
         await storage.addTrackToPlaylist({
           playlistId: playlist.id,
           spotifyId: track.id,
@@ -159,7 +198,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       const fullPlaylist = await storage.getPlaylistWithTracks(playlist.id);
-      res.json(fullPlaylist);
+      if (debugInfo) {
+        res.json({ ...fullPlaylist, debugInfo });
+      } else {
+        res.json(fullPlaylist);
+      }
     } catch (error) {
       console.error("Generate playlist error:", error);
       res.status(500).json({ message: "Failed to generate playlist" });

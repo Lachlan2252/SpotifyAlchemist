@@ -138,6 +138,62 @@ export class SpotifyService {
     return data.tracks.items;
   }
 
+  async getRecommendations(
+    accessToken: string,
+    options: Record<string, string | number | undefined>
+  ): Promise<SpotifyTrack[]> {
+    const params = new URLSearchParams();
+    for (const [key, value] of Object.entries(options)) {
+      if (value !== undefined && value !== '') {
+        params.append(key, String(value));
+      }
+    }
+
+    const response = await fetch(`https://api.spotify.com/v1/recommendations?${params.toString()}`, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to get recommendations: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.tracks;
+  }
+
+  async getAudioFeatures(accessToken: string, trackIds: string[]): Promise<Record<string, any>> {
+    if (trackIds.length === 0) return {};
+    const idChunks: string[][] = [];
+    for (let i = 0; i < trackIds.length; i += 100) {
+      idChunks.push(trackIds.slice(i, i + 100));
+    }
+
+    const features: Record<string, any> = {};
+
+    for (const chunk of idChunks) {
+      const response = await fetch(`https://api.spotify.com/v1/audio-features?ids=${chunk.join(',')}`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to get audio features: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      for (const af of data.audio_features || []) {
+        if (af && af.id) {
+          features[af.id] = af;
+        }
+      }
+    }
+
+    return features;
+  }
+
   async createPlaylist(accessToken: string, userId: string, name: string, description: string): Promise<SpotifyPlaylist> {
     const response = await fetch(`https://api.spotify.com/v1/users/${userId}/playlists`, {
       method: 'POST',
