@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { spotifyService } from "./services/spotify";
+import { parsePromptFilters } from "./utils/prompt";
 import { generatePlaylistFromPrompt, generateAdvancedPlaylistFromPrompt, modifyPlaylist, get_playlist_criteria_from_prompt, assistantExplainFeatures } from "./services/openai";
 import { PlaylistEditor } from "./services/playlist-editor";
 import { updateTrackSchema } from "@shared/schema";
@@ -109,6 +110,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const { prompt } = generatePlaylistSchema.parse(req.body);
+
+      const promptFilters = parsePromptFilters(prompt);
       
       const user = await storage.getUser(req.session.userId);
       if (!user) {
@@ -164,6 +167,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (Math.abs(af.tempo - criteria.audio_features.target_tempo) > 20) return false;
         const name = t.name.toLowerCase();
         if (/(remix|remaster|live|sped|edit)/.test(name)) return false;
+        if (promptFilters.noExplicit && (t as any).explicit) return false;
+        if (promptFilters.noRap) {
+          const artistNames = t.artists.map((a: { name: string }) => a.name.toLowerCase()).join(' ');
+          if (/rap|hip ?hop/.test(artistNames) || /rap|hip ?hop/.test(name)) return false;
+        }
         return true;
       }).slice(0, 25);
 
@@ -249,9 +257,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Remove duplicates and apply advanced filtering
-      const uniqueTracks = tracks.filter((track, index, self) => 
+      let uniqueTracks = tracks.filter((track, index, self) =>
         index === self.findIndex(t => t.id === track.id)
-      ).slice(0, config.targetTrackCount || 25);
+      );
+
+      if (config.explicitLyrics === 'filter') {
+        uniqueTracks = uniqueTracks.filter((t: any) => !t.explicit);
+      }
+
+      uniqueTracks = uniqueTracks.slice(0, config.targetTrackCount || 25);
 
       // Create playlist in database with advanced configuration
       const playlist = await storage.createPlaylist({

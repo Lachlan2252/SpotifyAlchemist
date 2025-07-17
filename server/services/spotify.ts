@@ -19,6 +19,7 @@ interface SpotifyTrack {
   album: { name: string; images: Array<{ url: string }> };
   duration_ms: number;
   preview_url: string | null;
+  explicit?: boolean;
 }
 
 interface SpotifyPlaylist {

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import request from 'supertest';
 import express from 'express';
 import session from 'express-session';
@@ -48,6 +49,9 @@ const processCommand = jest.fn();
 jest.mock('../services/playlist-editor', () => ({
   PlaylistEditor: jest.fn().mockImplementation(() => ({ processCommand }))
 }));
+
+const parsePromptFilters = jest.fn().mockReturnValue({ noExplicit: false, noRap: false });
+jest.mock('../utils/prompt', () => ({ parsePromptFilters }));
 
 import { registerRoutes } from '../routes';
 
