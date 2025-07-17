@@ -83,8 +83,60 @@ export default function Home() {
       <Sidebar playlists={playlists || []} recentPrompts={recentPrompts || []} />
       <main className="flex-1 ml-64 p-8">
         <Header user={user} />
-        <PromptGenerator />
-        <PlaylistDisplay />
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+          {/* Left Column - Main Content */}
+          <div className="xl:col-span-2">
+            <PromptGenerator />
+            <PlaylistDisplay />
+          </div>
+          
+          {/* Right Column - Spotify Data */}
+          <div className="space-y-6">
+            <div className="spotify-gray rounded-xl p-6">
+              <h2 className="text-xl font-bold mb-4">Your Spotify Playlists</h2>
+              <div className="space-y-3">
+                {playlists && playlists.length > 0 ? (
+                  playlists.slice(0, 5).map((playlist: any) => (
+                    <div key={playlist.id} className="flex items-center justify-between hover-spotify-lightgray p-3 rounded-lg transition-colors">
+                      <div className="flex items-center">
+                        <div className="w-10 h-10 bg-spotify-green rounded flex items-center justify-center">
+                          <i className="fas fa-music text-white text-sm"></i>
+                        </div>
+                        <div className="ml-3">
+                          <h3 className="font-medium text-sm">{playlist.name}</h3>
+                          <p className="text-xs text-gray-400">{playlist.description}</p>
+                        </div>
+                      </div>
+                      <button className="text-spotify-green hover:text-green-400 transition-colors">
+                        <i className="fas fa-play text-sm"></i>
+                      </button>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-gray-400 text-sm">Generate your first playlist!</p>
+                )}
+              </div>
+            </div>
+
+            <div id="recent" className="spotify-gray rounded-xl p-6">
+              <h2 className="text-xl font-bold mb-4">Recent Prompts</h2>
+              <div className="space-y-2">
+                {recentPrompts && recentPrompts.length > 0 ? (
+                  recentPrompts.slice(0, 5).map((prompt: any) => (
+                    <div key={prompt.id} className="p-3 bg-spotify-darkgray rounded-lg hover-spotify-lightgray transition-colors cursor-pointer">
+                      <p className="text-sm text-gray-300 line-clamp-2">{prompt.prompt}</p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {new Date(prompt.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-gray-400 text-sm">No recent prompts yet.</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
       </main>
     </div>
   );

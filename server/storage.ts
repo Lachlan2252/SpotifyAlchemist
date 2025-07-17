@@ -30,31 +30,51 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createOrUpdateUser(insertUser: InsertUser): Promise<User> {
-    const existingUser = await this.getUserBySpotifyId(insertUser.spotifyId);
-    
-    if (existingUser) {
-      // Update existing user
-      const [updatedUser] = await db
-        .update(users)
-        .set({
-          ...insertUser,
-          email: insertUser.email || null,
-          imageUrl: insertUser.imageUrl || null,
-        })
-        .where(eq(users.id, existingUser.id))
-        .returning();
-      return updatedUser;
-    } else {
-      // Create new user
-      const [user] = await db
-        .insert(users)
-        .values({
-          ...insertUser,
-          email: insertUser.email || null,
-          imageUrl: insertUser.imageUrl || null,
-        })
-        .returning();
-      return user;
+    try {
+      const existingUser = await this.getUserBySpotifyId(insertUser.spotifyId);
+      
+      if (existingUser) {
+        // Update existing user
+        const [updatedUser] = await db
+          .update(users)
+          .set({
+            ...insertUser,
+            email: insertUser.email || null,
+            imageUrl: insertUser.imageUrl || null,
+          })
+          .where(eq(users.id, existingUser.id))
+          .returning();
+        return updatedUser;
+      } else {
+        // Create new user
+        const [user] = await db
+          .insert(users)
+          .values({
+            ...insertUser,
+            email: insertUser.email || null,
+            imageUrl: insertUser.imageUrl || null,
+          })
+          .returning();
+        return user;
+      }
+    } catch (error: any) {
+      // Handle unique constraint violation
+      if (error.code === '23505' && error.constraint === 'users_spotify_id_unique') {
+        const existingUser = await this.getUserBySpotifyId(insertUser.spotifyId);
+        if (existingUser) {
+          const [updatedUser] = await db
+            .update(users)
+            .set({
+              ...insertUser,
+              email: insertUser.email || null,
+              imageUrl: insertUser.imageUrl || null,
+            })
+            .where(eq(users.id, existingUser.id))
+            .returning();
+          return updatedUser;
+        }
+      }
+      throw error;
     }
   }
 

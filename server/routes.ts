@@ -250,6 +250,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Spotify data endpoints
+  app.get("/api/spotify/playlists", async (req, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const user = await storage.getUser(req.session.userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const playlists = await spotifyService.getUserPlaylists(user.accessToken);
+      res.json(playlists);
+    } catch (error) {
+      console.error("Get Spotify playlists error:", error);
+      res.status(500).json({ message: "Failed to get Spotify playlists" });
+    }
+  });
+
+  app.get("/api/spotify/recently-played", async (req, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const user = await storage.getUser(req.session.userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const tracks = await spotifyService.getRecentlyPlayed(user.accessToken);
+      res.json(tracks);
+    } catch (error) {
+      console.error("Get recently played error:", error);
+      res.status(500).json({ message: "Failed to get recently played tracks" });
+    }
+  });
+
+  app.get("/api/spotify/playlist/:id/tracks", async (req, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const user = await storage.getUser(req.session.userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const playlistId = req.params.id;
+      const tracks = await spotifyService.getPlaylistTracks(user.accessToken, playlistId);
+      res.json(tracks);
+    } catch (error) {
+      console.error("Get playlist tracks error:", error);
+      res.status(500).json({ message: "Failed to get playlist tracks" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

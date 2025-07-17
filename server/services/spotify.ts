@@ -190,6 +190,36 @@ export class SpotifyService {
     const data = await response.json();
     return data.items;
   }
+
+  async getRecentlyPlayed(accessToken: string, limit = 20): Promise<SpotifyTrack[]> {
+    const response = await fetch(`https://api.spotify.com/v1/me/player/recently-played?limit=${limit}`, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to get recently played tracks: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.items.map((item: any) => item.track);
+  }
+
+  async getPlaylistTracks(accessToken: string, playlistId: string): Promise<SpotifyTrack[]> {
+    const response = await fetch(`https://api.spotify.com/v1/playlists/${playlistId}/tracks`, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to get playlist tracks: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.items.map((item: any) => item.track);
+  }
 }
 
 export const spotifyService = new SpotifyService();

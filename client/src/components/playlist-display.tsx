@@ -79,7 +79,7 @@ export default function PlaylistDisplay() {
   }
 
   return (
-    <div className="space-y-8">
+    <div id="playlists" className="space-y-8">
       <div className="spotify-gray rounded-xl p-6 mb-8">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center">
