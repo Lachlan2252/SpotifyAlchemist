@@ -1,9 +1,40 @@
 import OpenAI from "openai";
 
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-const openai = new OpenAI({ 
+const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY_ENV_VAR || "default_key"
 });
+
+const energySynonyms = ["hype", "banger", "turn up"]; // words implying high energy
+
+function normalizePrompt(prompt: string): { text: string; mood?: string } {
+  let text = prompt;
+  for (const word of energySynonyms) {
+    if (prompt.toLowerCase().includes(word)) {
+      if (!/high energy|energetic/.test(prompt.toLowerCase())) {
+        text += " high energy";
+      }
+      break;
+    }
+  }
+
+  const moodMap: Record<string, string> = {
+    "🌧️": "rainy",
+    "😢": "sad",
+    "😭": "sad",
+    "💔": "heartbreak",
+    "🔥": "intense",
+    "😍": "romantic",
+  };
+  for (const [emoji, mood] of Object.entries(moodMap)) {
+    if (prompt.includes(emoji)) {
+      text = text.replace(emoji, "");
+      return { text: text.trim(), mood };
+    }
+  }
+
+  return { text: text.trim() };
+}
 
 export interface PlaylistRequest {
   prompt: string;
@@ -18,10 +49,11 @@ export interface PlaylistResponse {
   genre: string;
   mood: string;
   energy: number;
+  coverArtPrompt?: string;
 }
 
 export interface TrackModificationRequest {
-  action: "add_similar" | "replace_overplayed" | "reorder_by_mood";
+  action: "add_similar" | "replace_overplayed" | "reorder_by_mood" | "follow_up";
   currentTracks: Array<{
     name: string;
     artist: string;
@@ -50,7 +82,8 @@ export interface PlaylistCriteria {
 
 export async function generatePlaylistFromPrompt(request: PlaylistRequest): Promise<PlaylistResponse> {
   try {
-    const systemPrompt = `You are a music expert AI that creates Spotify playlists based on natural language descriptions. 
+    const normalized = normalizePrompt(request.prompt);
+    const systemPrompt = `You are a music expert AI that creates Spotify playlists based on natural language descriptions.
     Given a prompt, generate a playlist with a name, description, and search queries for finding appropriate tracks.
     
     The user's prompt might describe:
@@ -75,7 +108,7 @@ export async function generatePlaylistFromPrompt(request: PlaylistRequest): Prom
       model: "gpt-4o",
       messages: [
         { role: "system", content: systemPrompt },
-        { role: "user", content: request.prompt }
+        { role: "user", content: normalized.text }
       ],
       response_format: { type: "json_object" },
       temperature: 0.8,
@@ -88,8 +121,9 @@ export async function generatePlaylistFromPrompt(request: PlaylistRequest): Prom
       description: result.description || "A playlist created by AI",
       searchQueries: result.searchQueries || [],
       genre: result.genre || "Various",
-      mood: result.mood || "Mixed",
+      mood: result.mood || normalized.mood || "Mixed",
       energy: Math.max(1, Math.min(10, result.energy || 5)),
+      coverArtPrompt: result.coverArtPrompt,
     };
   } catch (error) {
     console.error("OpenAI API error:", error);
@@ -110,6 +144,9 @@ export async function modifyPlaylist(request: TrackModificationRequest): Promise
         break;
       case "reorder_by_mood":
         systemPrompt = `You are a music expert AI. Given a list of current tracks, suggest a new order based on energy flow and mood progression. Return JSON with "reorderedPositions" array (new order indices) and "reasoning" string.`;
+        break;
+      case "follow_up":
+        systemPrompt = `You are a music expert AI helping refine an existing playlist. The user will give follow-up instructions to modify the playlist (e.g., make it slower or more upbeat). Return JSON with any combination of "searchQueries", "trackRemovals", "reorderedPositions", and "reasoning".`;
         break;
     }
 
@@ -222,7 +259,7 @@ export async function get_playlist_criteria_from_prompt(prompt: string): Promise
 export async function generateAdvancedPlaylistFromPrompt(config: any): Promise<any> {
   try {
     // Build a comprehensive prompt incorporating all advanced features
-    let systemPrompt = `You are an expert AI music curator with deep knowledge of musical genres, artists, decades, and audio characteristics. 
+    let systemPrompt = `You are an expert AI music curator with deep knowledge of musical genres, artists, decades, and audio characteristics.
     Generate a playlist based on the provided advanced configuration. Consider all parameters carefully.
 
     Your task is to create intelligent search queries that will find the perfect tracks for this playlist.
@@ -235,7 +272,8 @@ export async function generateAdvancedPlaylistFromPrompt(config: any): Promise<a
       "reasoning": "detailed explanation of your curation choices"
     }`;
 
-    let userPrompt = `Main prompt: ${config.prompt}
+    const normalized = normalizePrompt(config.prompt);
+    let userPrompt = `Main prompt: ${normalized.text}
 
 Advanced Configuration:
 - Vibe: ${config.vibe || "not specified"}
@@ -287,7 +325,11 @@ If story arc mode is enabled, structure queries to progress from intro → build
 If segmented mode is enabled, create distinct sections with different characteristics.`;
 
     const response = await generateCompletion(systemPrompt, userPrompt);
-    return JSON.parse(response);
+    const result = JSON.parse(response);
+    if (!result.mood && normalized.mood) {
+      result.mood = normalized.mood;
+    }
+    return result;
   } catch (error) {
     console.error("Advanced playlist generation error:", error);
     throw new Error("Failed to generate advanced playlist: " + (error as Error).message);

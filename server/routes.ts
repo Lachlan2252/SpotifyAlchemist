@@ -633,6 +633,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/playlists/:id/follow-up", async (req, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const playlistId = parseInt(req.params.id);
+      const { prompt } = req.body as { prompt: string };
+      const playlist = await storage.getPlaylistWithTracks(playlistId);
+      if (!playlist || playlist.userId !== req.session.userId) {
+        return res.status(404).json({ message: "Playlist not found" });
+      }
+
+      const currentTracks = playlist.tracks.map(t => ({
+        name: t.name,
+        artist: t.artist,
+        album: t.album,
+      }));
+
+      const ai = await modifyPlaylist({
+        action: "follow_up",
+        currentTracks,
+        prompt,
+      });
+
+      await storage.addRecentPrompt({
+        userId: req.session.userId,
+        prompt,
+        playlistId,
+      });
+
+      res.json(ai);
+    } catch (error) {
+      console.error("Follow-up prompt error:", error);
+      res.status(500).json({ message: "Failed to process follow-up" });
+    }
+  });
+
+  app.get("/api/playlists/:id/export", async (req, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const playlistId = parseInt(req.params.id);
+      const format = (req.query.format as string) || "json";
+      const playlist = await storage.getPlaylistWithTracks(playlistId);
+      if (!playlist || playlist.userId !== req.session.userId) {
+        return res.status(404).json({ message: "Playlist not found" });
+      }
+
+      if (format === "csv") {
+        const header = "name,artist,album\n";
+        const rows = playlist.tracks.map(t => `${t.name.replace(/,/g, '')},${t.artist.replace(/,/g, '')},${t.album.replace(/,/g, '')}`).join("\n");
+        res.type("text/csv").send(header + rows);
+      } else if (format === "txt") {
+        const lines = playlist.tracks.map(t => `${t.name} - ${t.artist}`).join("\n");
+        res.type("text/plain").send(lines);
+      } else {
+        res.json(playlist);
+      }
+    } catch (error) {
+      console.error("Export playlist error:", error);
+      res.status(500).json({ message: "Failed to export playlist" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
