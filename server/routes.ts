@@ -175,7 +175,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const config = req.body;
       const debugMode = !!config.debug;
-      const debug: any = { filtersUsed: {}, rejected: [] };
+      interface DebugInfo {
+        filtersUsed: Record<string, any>;
+        rejected: any[];
+      }
+      const debug: DebugInfo = { filtersUsed: {}, rejected: [] };
 
       const user = await storage.getUser(req.session.userId);
       if (!user) {
