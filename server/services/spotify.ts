@@ -276,6 +276,22 @@ export class SpotifyService {
     const data = await response.json();
     return data.items.map((item: any) => item.track);
   }
+
+  async getAudioFeatures(accessToken: string, trackIds: string[]): Promise<any[]> {
+    const ids = trackIds.join(',');
+    const response = await fetch(`https://api.spotify.com/v1/audio-features?ids=${ids}`, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to get audio features: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.audio_features;
+  }
 }
 
 export const spotifyService = new SpotifyService();
