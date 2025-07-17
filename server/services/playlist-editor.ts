@@ -194,11 +194,11 @@ export class PlaylistEditor {
 
         case 'sort_by_year':
           sortedTracks.sort((a, b) => {
-            const yearA = a.releaseDate ? new Date(a.releaseDate).getFullYear() : 0;
-            const yearB = b.releaseDate ? new Date(b.releaseDate).getFullYear() : 0;
+            const yearA = a.releaseDate ? new Date(a.releaseDate).getFullYear() : -Infinity;
+            const yearB = b.releaseDate ? new Date(b.releaseDate).getFullYear() : -Infinity;
             return yearB - yearA;
           });
-        changes.push('Sorted by release year (newest first)');
+        changes.push('Sorted by release year (newest first, unknown dates last)');
         break;
 
       case 'energy_curve':
