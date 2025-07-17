@@ -1,0 +1,149 @@
+Expand the AI playlist app to support a massive library of user-driven editing features, all accessible through natural language commands or prompt-style input. The AI should intelligently interpret commands like “Make this playlist feel older,” “Swap sad tracks for aggressive ones,” or “Sort by tempo then genre.” Include tools for emotional tuning, timeline remixing, rarity hunting, culture-matching, and cross-platform inspiration.
+
+🧩 🔥 Editing Features by Prompt
+🎛️ Track Filtering / Cleaning
+“Remove all songs under 2:30”
+
+“Remove any songs from before 2010”
+
+“Remove songs with low danceability”
+
+“Remove anything I’ve liked before”
+
+“Delete all country songs unless it’s Zach Bryan”
+
+🧬 Mood Transformation
+“Turn this into a confident main character arc”
+
+“Make this playlist sadder without going full depression”
+
+“Give me a healing-from-heartbreak remix”
+
+“Add a hopeful outro to this dark playlist”
+
+🎨 Theme & Style Modding
+“Turn this into an early 2000s pop punk playlist”
+
+“Make this sound like it's curated by Quentin Tarantino”
+
+“Convert this playlist into a lo-fi jazz version”
+
+“Replace every song with a female-led alternative”
+
+🧠 AI Curation Logic Enhancements
+“Make it feel like a rising action movie scene”
+
+“Build a tension curve from track 1 to track 20”
+
+“Ensure the energy peaks in the middle and resolves slowly”
+
+“Every 4th song should be a throwback”
+
+“Group songs in trilogies by energy shift”
+
+⏳ Temporal & Generational Remixing
+“Make this playlist feel like it’s from 1996”
+
+“Only keep songs from the 70s–90s”
+
+“Find modern songs that sound vintage”
+
+“Take this 80s playlist and make it Gen Z friendly”
+
+🎭 Personality & Character Modes
+“Build a playlist for a vampire who listens to alt rock”
+
+“Make this sound like it was curated by a record store snob”
+
+“Remix this for a stoic cowboy on a road trip”
+
+“Make it feel like the soundtrack to a Wes Anderson film”
+
+🌐 Culture & Scene Matching
+“Make this playlist sound French and dreamy”
+
+“Turn this into a Tokyo street fashion soundtrack”
+
+“Add K-pop and reggaeton influence”
+
+“Mix UK grime into this chill rap playlist”
+
+📊 Sorting & Reordering
+“Sort by BPM descending”
+
+“Group songs by genre then ascending energy”
+
+“Cluster tracks by mood progression”
+
+“Alternate male/female vocals”
+
+“Start chill, go wild in the middle, end soft”
+
+🧩 Expansion Prompts
+“Double this playlist’s size with similar songs”
+
+“Add obscure indie artists no one’s heard of”
+
+“Add songs that would impress music nerds”
+
+“Add deep cuts from artists already in the list”
+
+“Add viral songs with under 50k monthly listeners”
+
+🧹 Refinement Tools
+“Remove songs I’ve skipped before”
+
+“Flag tracks with questionable lyrics”
+
+“Keep only songs in minor key”
+
+“Replace every track with something from 2023–2025”
+
+🧪 Bonus Power-Ups
+“Make a version of this playlist without lyrics”
+
+“Turn this into a cover songs playlist”
+
+“Make a sad version and a happy version of the same playlist”
+
+“Group songs by samples — find originals or remixes”
+
+“Add tracks that share the same tempo/key as each song”
+
+🧠 Personalization Layer
+Let users define:
+
+⚡️ Favorite artists
+
+💤 Artists to avoid
+
+💔 Songs to never include again
+
+👀 Skipped tracks from history
+
+🧠 Preferred BPM range
+
+🔄 Auto-refresh preferences
+
+Then apply that taste profile to every command.
+
+🧑‍🎤 Example User Prompts
+“Take this gym playlist and give it a cinematic villain arc vibe”
+
+“Cut this down to just 10 songs that best represent the feeling of revenge”
+
+“Make this playlist something you’d hear in a Brooklyn basement party in 2016”
+
+“Trim this to only include tracks under 3 mins and add hyperpop influences”
+
+“Build tension then release emotionally over the tracklist”
+
+💬 Make It All Work via Prompt Chat Interface
+Use a GPT-style chat input where users can type anything, and the backend parses it to modify the playlist in real-time. Add system prompts like:
+
+System: You are a music expert and playlist curator. Interpret every prompt as a creative audio transformation.
+
+User: Make this feel more rebellious and energetic with punk influences.
+
+→ AI Response: Replacing low energy tracks and injecting punk/grunge songs with tempo >130 BPM.
+

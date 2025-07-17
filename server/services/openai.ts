@@ -128,3 +128,22 @@ export async function modifyPlaylist(request: TrackModificationRequest): Promise
     throw new Error("Failed to modify playlist: " + (error as Error).message);
   }
 }
+
+export async function generateCompletion(systemPrompt: string, userPrompt: string): Promise<string> {
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt }
+      ],
+      response_format: { type: "json_object" },
+      temperature: 0.7,
+    });
+
+    return response.choices[0].message.content || "";
+  } catch (error) {
+    console.error("OpenAI API error:", error);
+    throw new Error("Failed to generate completion: " + (error as Error).message);
+  }
+}

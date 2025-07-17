@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { spotifyService } from "./services/spotify";
 import { generatePlaylistFromPrompt, modifyPlaylist } from "./services/openai";
+import { PlaylistEditor } from "./services/playlist-editor";
 import { z } from "zod";
 
 // Extend express session to include userId
@@ -13,6 +14,7 @@ declare module "express-session" {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  const playlistEditor = new PlaylistEditor();
   // Spotify OAuth routes
   app.get("/api/auth/spotify", async (req, res) => {
     try {
@@ -306,6 +308,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Get playlist tracks error:", error);
       res.status(500).json({ message: "Failed to get playlist tracks" });
+    }
+  });
+
+  // Playlist editing endpoint
+  app.post("/api/playlists/:id/edit", async (req, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const { command, userPreferences } = req.body;
+      const playlistId = parseInt(req.params.id);
+
+      if (!command) {
+        return res.status(400).json({ message: "Command is required" });
+      }
+
+      const playlist = await storage.getPlaylistWithTracks(playlistId);
+      if (!playlist) {
+        return res.status(404).json({ message: "Playlist not found" });
+      }
+
+      if (playlist.userId !== req.session.userId) {
+        return res.status(403).json({ message: "Not authorized to edit this playlist" });
+      }
+
+      const result = await playlistEditor.processCommand({
+        tracks: playlist.tracks,
+        command,
+        userPreferences
+      });
+
+      // Update playlist metadata
+      await storage.updatePlaylist(playlistId, {
+        trackCount: result.tracks.length,
+      });
+
+      // For now, we'll return the result without updating individual tracks
+      // In a full implementation, we'd need to update the tracks table
+
+      res.json({
+        playlist: {
+          ...playlist,
+          tracks: result.tracks,
+          updatedAt: new Date(),
+        },
+        explanation: result.explanation,
+        changes: result.changes,
+      });
+    } catch (error) {
+      console.error("Playlist edit error:", error);
+      res.status(500).json({ message: "Failed to edit playlist" });
     }
   });
 

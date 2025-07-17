@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import TrackList from "@/components/track-list";
 import PlaylistActions from "@/components/playlist-actions";
+import PlaylistEditor from "@/components/playlist-editor";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -9,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 export default function PlaylistDisplay() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [playlistState, setPlaylistState] = useState<any>(null);
 
   const { data: currentPlaylist, isLoading } = useQuery({
     queryKey: ["/api/playlists", "current"],
@@ -116,6 +119,14 @@ export default function PlaylistDisplay() {
         </div>
 
         <TrackList tracks={currentPlaylist.tracks} />
+        
+        <PlaylistEditor 
+          playlist={currentPlaylist} 
+          onPlaylistUpdate={(updatedPlaylist) => {
+            setPlaylistState(updatedPlaylist);
+            queryClient.setQueryData(["/api/playlists", "current"], updatedPlaylist);
+          }}
+        />
       </div>
 
       <PlaylistActions currentPlaylist={currentPlaylist} />

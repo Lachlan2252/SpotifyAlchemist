@@ -117,6 +117,11 @@ export class DatabaseStorage implements IStorage {
       .orderBy(playlists.createdAt);
   }
 
+  async getPlaylist(id: number): Promise<Playlist | undefined> {
+    const [playlist] = await db.select().from(playlists).where(eq(playlists.id, id));
+    return playlist || undefined;
+  }
+
   async updatePlaylist(id: number, updates: Partial<InsertPlaylist>): Promise<void> {
     await db
       .update(playlists)
