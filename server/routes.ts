@@ -143,7 +143,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const deduped = tracks.filter((t, i, self) => i === self.findIndex(x => x.id === t.id));
 
       // Validate audio features
-      const features = await spotifyService.getAudioFeatures(user.accessToken, deduped.map(t => t.id));
+      const features = await spotifyService.getAudioFeaturesMap(user.accessToken, deduped.map(t => t.id));
       const filtered = deduped.filter(t => {
         const af = features[t.id];
         if (!af) return true;
