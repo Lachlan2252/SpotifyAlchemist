@@ -88,6 +88,7 @@ npm install
    - `SPOTIFY_REDIRECT_URI` – OAuth callback URL
    - Either `OPENAI_API_KEY` or `OPENAI_API_KEY_ENV_VAR` must provide your OpenAI API key (the app will fail to start if neither is set)
    - `SESSION_SECRET` – any random string
+   - You can also provide the OpenAI key later from the Preferences panel in the web UI
 
 ### 4. Database Setup
 
