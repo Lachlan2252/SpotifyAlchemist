@@ -15,6 +15,7 @@ An intelligent playlist generation tool that creates custom Spotify playlists us
 - **Synonym Support**: Words like "hype" or "banger" imply high energy
 - **Cover Art Suggestions**: GPT proposes ideas for playlist artwork
 - **Export Tools**: Download playlists as JSON, CSV, or plain text
+- **Advanced Editing**: Filter by BPM, mood or artist, remove duplicates and non-English tracks
 
 ## Tech Stack
 
