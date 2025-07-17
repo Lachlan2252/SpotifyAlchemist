@@ -5,7 +5,9 @@ module.exports = {
   testMatch: ['**/server/tests/**/*.test.ts'],
   globals: {
     'ts-jest': {
-
+      useESM: true,
+      tsconfig: './tsconfig.test.json'
+    }
   },
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/client/src/$1',
