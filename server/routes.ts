@@ -633,6 +633,129 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/playlists/:id/replace-overplayed", async (req, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const playlistId = parseInt(req.params.id);
+      const playlist = await storage.getPlaylistWithTracks(playlistId);
+      if (!playlist || playlist.userId !== req.session.userId) {
+        return res.status(404).json({ message: "Playlist not found" });
+      }
+
+      const user = await storage.getUser(req.session.userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const currentTracks = playlist.tracks.map(t => ({
+        name: t.name,
+        artist: t.artist,
+        album: t.album,
+      }));
+
+      const ai = await modifyPlaylist({
+        action: "replace_overplayed",
+        currentTracks,
+      });
+
+      const removals = (ai.trackRemovals ?? []).sort((a, b) => b - a);
+      for (const index of removals) {
+        const track = playlist.tracks[index];
+        if (track) {
+          await storage.removeTrackFromPlaylist(playlistId, track.id);
+        }
+      }
+
+      let updated = await storage.getPlaylistWithTracks(playlistId);
+      if (!updated) throw new Error("Playlist disappeared");
+      for (let i = 0; i < updated.tracks.length; i++) {
+        await storage.updateTrack(updated.tracks[i].id, { position: i });
+      }
+
+      const newTracks: any[] = [];
+      const existing = new Set(updated.tracks.map(t => t.spotifyId));
+      for (const query of (ai.searchQueries ?? []).slice(0, 5)) {
+        const results = await spotifyService.searchTracks(user.accessToken, query, 3);
+        for (const track of results) {
+          if (!existing.has(track.id)) {
+            newTracks.push(track);
+            existing.add(track.id);
+          }
+          if (newTracks.length >= removals.length) break;
+        }
+        if (newTracks.length >= removals.length) break;
+      }
+
+      const startPos = updated.tracks.length;
+      for (let i = 0; i < newTracks.length; i++) {
+        const track = newTracks[i];
+        await storage.addTrackToPlaylist({
+          playlistId,
+          spotifyId: track.id,
+          name: track.name,
+          artist: track.artists[0]?.name || "Unknown Artist",
+          album: track.album.name,
+          duration: track.duration_ms,
+          imageUrl: track.album.images[0]?.url || null,
+          previewUrl: track.preview_url,
+          position: startPos + i,
+        });
+      }
+
+      await storage.updatePlaylist(playlistId, { trackCount: startPos + newTracks.length });
+
+      updated = await storage.getPlaylistWithTracks(playlistId);
+      res.json({ playlist: updated, reasoning: ai.reasoning });
+    } catch (error) {
+      console.error("Replace overplayed error:", error);
+      res.status(500).json({ message: "Failed to replace overplayed songs" });
+    }
+  });
+
+  app.post("/api/playlists/:id/reorder-by-mood", async (req, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const playlistId = parseInt(req.params.id);
+      const playlist = await storage.getPlaylistWithTracks(playlistId);
+      if (!playlist || playlist.userId !== req.session.userId) {
+        return res.status(404).json({ message: "Playlist not found" });
+      }
+
+      const currentTracks = playlist.tracks.map(t => ({
+        name: t.name,
+        artist: t.artist,
+        album: t.album,
+      }));
+
+      const ai = await modifyPlaylist({
+        action: "reorder_by_mood",
+        currentTracks,
+      });
+
+      const order = ai.reorderedPositions ?? [];
+      if (order.length === playlist.tracks.length) {
+        for (let i = 0; i < order.length; i++) {
+          const track = playlist.tracks[order[i]];
+          if (track) {
+            await storage.updateTrack(track.id, { position: i });
+          }
+        }
+      }
+
+      const updated = await storage.getPlaylistWithTracks(playlistId);
+      res.json({ playlist: updated, reasoning: ai.reasoning });
+    } catch (error) {
+      console.error("Reorder by mood error:", error);
+      res.status(500).json({ message: "Failed to reorder playlist" });
+    }
+  });
+
   app.post("/api/playlists/:id/follow-up", async (req, res) => {
     try {
       if (!req.session.userId) {

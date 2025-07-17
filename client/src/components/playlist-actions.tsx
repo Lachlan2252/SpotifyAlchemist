@@ -40,18 +40,60 @@ export default function PlaylistActions({ currentPlaylist }: PlaylistActionsProp
     addSimilarSongs.mutate();
   };
 
+  const replaceOverplayed = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest(
+        "POST",
+        `/api/playlists/${currentPlaylist.id}/replace-overplayed`
+      );
+      return res.json();
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(["/api/playlists", "current"], data.playlist);
+      toast({
+        title: "Replaced overplayed songs",
+        description: data.reasoning || "Updated with fresh tracks",
+      });
+    },
+    onError: (err: any) => {
+      toast({
+        title: "Failed to replace songs",
+        description: err.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const reorderByMood = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest(
+        "POST",
+        `/api/playlists/${currentPlaylist.id}/reorder-by-mood`
+      );
+      return res.json();
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(["/api/playlists", "current"], data.playlist);
+      toast({
+        title: "Playlist reordered",
+        description: data.reasoning || "Tracks rearranged",
+      });
+    },
+    onError: (err: any) => {
+      toast({
+        title: "Failed to reorder",
+        description: err.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleReplaceOverplayed = () => {
-    toast({
-      title: "Not implemented",
-      description: "Replace overplayed is coming soon",
-    });
+    replaceOverplayed.mutate();
   };
 
   const handleReorderByMood = () => {
-    toast({
-      title: "Not implemented",
-      description: "Reorder by mood is coming soon",
-    });
+    reorderByMood.mutate();
   };
 
   return (
