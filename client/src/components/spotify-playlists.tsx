@@ -35,7 +35,7 @@ export default function SpotifyPlaylists() {
     );
   }
 
-  if (!spotifyPlaylists || spotifyPlaylists.length === 0) {
+  if (!spotifyPlaylists || !Array.isArray(spotifyPlaylists) || spotifyPlaylists.length === 0) {
     return (
       <div className="spotify-gray rounded-xl p-6">
         <h2 className="text-xl font-bold mb-4">Your Spotify Playlists</h2>
@@ -48,7 +48,7 @@ export default function SpotifyPlaylists() {
     <div className="spotify-gray rounded-xl p-6">
       <h2 className="text-xl font-bold mb-4">Your Spotify Playlists</h2>
       <div className="space-y-4">
-        {spotifyPlaylists.map((playlist: SpotifyPlaylist) => (
+        {Array.isArray(spotifyPlaylists) ? spotifyPlaylists.map((playlist: SpotifyPlaylist) => (
           <div key={playlist.id} className="flex items-center justify-between hover-spotify-lightgray p-3 rounded-lg transition-colors">
             <div className="flex items-center">
               <img 
@@ -81,7 +81,7 @@ export default function SpotifyPlaylists() {
               </Button>
             </div>
           </div>
-        ))}
+        )) : null}
       </div>
     </div>
   );

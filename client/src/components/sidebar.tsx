@@ -100,7 +100,7 @@ export default function Sidebar({ playlists, recentPrompts }: SidebarProps) {
       <div className="border-t border-gray-600 pt-6 mt-6">
         <h3 className="text-sm font-semibold text-gray-400 mb-4 uppercase tracking-wide">Spotify Playlists</h3>
         <div className="space-y-2">
-          {spotifyPlaylists && spotifyPlaylists.length > 0 ? (
+          {spotifyPlaylists && Array.isArray(spotifyPlaylists) && spotifyPlaylists.length > 0 ? (
             spotifyPlaylists.slice(0, 5).map((playlist: any) => (
               <button
                 key={playlist.id}
@@ -129,7 +129,7 @@ export default function Sidebar({ playlists, recentPrompts }: SidebarProps) {
       <div className="border-t border-gray-600 pt-6 mt-6">
         <h3 className="text-sm font-semibold text-gray-400 mb-4 uppercase tracking-wide">Recently Played</h3>
         <div className="space-y-2">
-          {recentlyPlayed && recentlyPlayed.length > 0 ? (
+          {recentlyPlayed && Array.isArray(recentlyPlayed) && recentlyPlayed.length > 0 ? (
             recentlyPlayed.slice(0, 3).map((track: any) => (
               <button
                 key={track.id}

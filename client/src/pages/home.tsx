@@ -80,9 +80,9 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex">
-      <Sidebar playlists={playlists || []} recentPrompts={recentPrompts || []} />
+      <Sidebar playlists={Array.isArray(playlists) ? playlists : []} recentPrompts={Array.isArray(recentPrompts) ? recentPrompts : []} />
       <main className="flex-1 ml-64 p-8">
-        <Header user={user} />
+        <Header user={user || {}} />
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
           {/* Left Column - Main Content */}
           <div className="xl:col-span-2">
@@ -95,7 +95,7 @@ export default function Home() {
             <div className="spotify-gray rounded-xl p-6">
               <h2 className="text-xl font-bold mb-4">Your Spotify Playlists</h2>
               <div className="space-y-3">
-                {playlists && playlists.length > 0 ? (
+                {playlists && Array.isArray(playlists) && playlists.length > 0 ? (
                   playlists.slice(0, 5).map((playlist: any) => (
                     <div key={playlist.id} className="flex items-center justify-between hover-spotify-lightgray p-3 rounded-lg transition-colors">
                       <div className="flex items-center">
@@ -121,7 +121,7 @@ export default function Home() {
             <div id="recent" className="spotify-gray rounded-xl p-6">
               <h2 className="text-xl font-bold mb-4">Recent Prompts</h2>
               <div className="space-y-2">
-                {recentPrompts && recentPrompts.length > 0 ? (
+                {recentPrompts && Array.isArray(recentPrompts) && recentPrompts.length > 0 ? (
                   recentPrompts.slice(0, 5).map((prompt: any) => (
                     <div key={prompt.id} className="p-3 bg-spotify-darkgray rounded-lg hover-spotify-lightgray transition-colors cursor-pointer">
                       <p className="text-sm text-gray-300 line-clamp-2">{prompt.prompt}</p>

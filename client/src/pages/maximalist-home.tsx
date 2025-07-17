@@ -165,11 +165,11 @@ export default function MaximalistHome() {
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
               <img 
-                src={user.imageUrl || "https://via.placeholder.com/32"} 
-                alt={user.displayName} 
+                src={(user as any)?.imageUrl || "https://via.placeholder.com/32"} 
+                alt={(user as any)?.displayName || "User"} 
                 className="w-8 h-8 rounded-full"
               />
-              <span className="text-white text-sm">{user.displayName}</span>
+              <span className="text-white text-sm">{(user as any)?.displayName || 'User'}</span>
             </div>
             <Button
               onClick={handleLogout}
@@ -225,14 +225,14 @@ export default function MaximalistHome() {
               
               <TabsContent value="library" className="mt-4">
                 <div className="space-y-4">
-                  <h3 className="text-white font-semibold">Your Playlists ({playlists?.length || 0})</h3>
+                  <h3 className="text-white font-semibold">Your Playlists ({Array.isArray(playlists) ? playlists.length : 0})</h3>
                   <div className="space-y-2">
                     {playlistsLoading ? (
                       <div className="text-center py-4">
                         <div className="animate-spin w-6 h-6 border-2 border-purple-500 border-t-transparent rounded-full mx-auto"></div>
                         <p className="text-gray-400 text-sm mt-2">Loading playlists...</p>
                       </div>
-                    ) : playlists?.length > 0 ? (
+                    ) : Array.isArray(playlists) && playlists.length > 0 ? (
                       playlists.map((playlist: any) => (
                         <Card key={playlist.id} className="bg-gray-800/50 border-gray-700 hover:bg-gray-700/50 cursor-pointer transition-colors" onClick={() => handlePlaylistClick(playlist)}>
                           <CardContent className="p-3">
@@ -256,7 +256,7 @@ export default function MaximalistHome() {
                 <div className="space-y-4">
                   <h3 className="text-white font-semibold">Recent Prompts</h3>
                   <div className="space-y-2">
-                    {recentPrompts?.length > 0 ? (
+                    {Array.isArray(recentPrompts) && recentPrompts.length > 0 ? (
                       recentPrompts.map((prompt: any) => (
                         <Card key={prompt.id} className="bg-gray-800/50 border-gray-700 hover:bg-gray-700/50 cursor-pointer transition-colors" onClick={() => handlePromptClick(prompt.prompt)}>
                           <CardContent className="p-3">
@@ -310,7 +310,7 @@ export default function MaximalistHome() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <TrackList tracks={currentPlaylist.tracks || []} showArtwork={true} />
+                  <TrackList tracks={currentPlaylist.tracks || []} showArtwork />
                 </CardContent>
               </Card>
             </div>

@@ -44,7 +44,7 @@ export default function RecentlyPlayed() {
     );
   }
 
-  if (!recentlyPlayed || recentlyPlayed.length === 0) {
+  if (!recentlyPlayed || !Array.isArray(recentlyPlayed) || recentlyPlayed.length === 0) {
     return (
       <div className="spotify-gray rounded-xl p-6">
         <h2 className="text-xl font-bold mb-4">Recently Played</h2>
@@ -57,7 +57,7 @@ export default function RecentlyPlayed() {
     <div className="spotify-gray rounded-xl p-6">
       <h2 className="text-xl font-bold mb-4">Recently Played</h2>
       <div className="space-y-4">
-        {recentlyPlayed.map((track: SpotifyTrack) => (
+        {Array.isArray(recentlyPlayed) ? recentlyPlayed.map((track: SpotifyTrack) => (
           <div key={track.id} className="flex items-center justify-between hover-spotify-lightgray p-3 rounded-lg transition-colors">
             <div className="flex items-center">
               <img 
@@ -92,7 +92,7 @@ export default function RecentlyPlayed() {
               </Button>
             </div>
           </div>
-        ))}
+        )) : null}
       </div>
     </div>
   );

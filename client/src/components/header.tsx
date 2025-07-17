@@ -1,6 +1,6 @@
 interface HeaderProps {
   user: {
-    displayName: string;
+    displayName?: string;
     imageUrl?: string;
   };
 }
@@ -15,7 +15,7 @@ export default function Header({ user }: HeaderProps) {
             alt="User profile" 
             className="w-8 h-8 rounded-full object-cover"
           />
-          <span className="ml-3 text-sm font-medium">{user.displayName}</span>
+          <span className="ml-3 text-sm font-medium">{user.displayName || 'User'}</span>
           <i className="fas fa-chevron-down ml-2 text-xs"></i>
         </div>
       </div>
