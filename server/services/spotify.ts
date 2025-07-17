@@ -267,13 +267,13 @@ export class SpotifyService {
     return data.tracks;
   }
 
-  async getAudioFeatures(accessToken: string, trackIds: string[]): Promise<any[]> {
+  async getAudioFeatures(accessToken: string, trackIds: string[]): Promise<AudioFeatures[]> {
     const chunks: string[][] = [];
     for (let i = 0; i < trackIds.length; i += 100) {
       chunks.push(trackIds.slice(i, i + 100));
     }
 
-    const results: any[] = [];
+    const results: AudioFeatures[] = [];
     for (const chunk of chunks) {
       const ids = chunk.join(',');
       const response = await fetch(`https://api.spotify.com/v1/audio-features?ids=${ids}`, {
