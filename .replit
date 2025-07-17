@@ -35,7 +35,7 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "node server/fixed-server.js"
+args = "node server/playlist-app-server.js"
 waitForPort = 5000
 
 [objectStorage]
