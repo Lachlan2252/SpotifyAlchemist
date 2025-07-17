@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { spotifyService } from "./services/spotify";
-import { generatePlaylistFromPrompt, generateAdvancedPlaylistFromPrompt, modifyPlaylist, get_playlist_criteria_from_prompt, assistantExplainFeatures } from "./services/openai";
+import { generatePlaylistFromPrompt, generateAdvancedPlaylistFromPrompt, modifyPlaylist, get_playlist_criteria_from_prompt, assistantExplainFeatures, suggestPromptCompletions } from "./services/openai";
 import { PlaylistEditor } from "./services/playlist-editor";
 import { updateTrackSchema } from "@shared/schema";
 import { z } from "zod";
@@ -94,6 +94,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Assistant error:", error);
       res.status(500).json({ message: "Failed to generate assistant response" });
+    }
+  });
+
+  app.get("/api/prompts/suggest", async (req, res) => {
+    try {
+      const text = z.string().min(1).max(100).parse(req.query.text);
+      const suggestions = await suggestPromptCompletions(text);
+      res.json({ suggestions });
+    } catch (error) {
+      console.error("Prompt suggest error:", error);
+      res.status(500).json({ message: "Failed to get suggestions" });
     }
   });
 

@@ -354,3 +354,25 @@ export async function assistantExplainFeatures(question: string): Promise<string
   });
   return response.choices[0].message.content || "";
 }
+
+export async function suggestPromptCompletions(text: string): Promise<string[]> {
+  const systemPrompt =
+    "You suggest short playlist prompt completions. Return a JSON array of concise suggestions.";
+  const response = await openai.chat.completions.create({
+    model: "gpt-4o",
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: text }
+    ],
+    response_format: { type: "json_object" },
+    temperature: 0.7,
+  });
+
+  const content = response.choices[0].message.content || "[]";
+  try {
+    const parsed = JSON.parse(content);
+    if (Array.isArray(parsed)) return parsed;
+    if (Array.isArray(parsed.suggestions)) return parsed.suggestions;
+  } catch {}
+  return [];
+}

@@ -150,8 +150,28 @@ export default function PlaylistGenerator({ onPlaylistGenerated, templatePrompt,
     languageSpecific: "",
     templateUsed: "",
   });
-  
+
+  const [promptSuggestions, setPromptSuggestions] = useState<string[]>([]);
+
   const [activeTab, setActiveTab] = useState("basic");
+
+  useEffect(() => {
+    const text = config.prompt.trim();
+    if (!text) {
+      setPromptSuggestions([]);
+      return;
+    }
+    const handle = setTimeout(() => {
+      apiRequest(
+        "GET",
+        `/api/prompts/suggest?text=${encodeURIComponent(text)}`
+      )
+        .then(res => res.json())
+        .then(data => setPromptSuggestions(data.suggestions || []))
+        .catch(() => {});
+    }, 300);
+    return () => clearTimeout(handle);
+  }, [config.prompt]);
   
   const generatePlaylist = useMutation({
     mutationFn: async (config: PlaylistConfig) => {
@@ -248,7 +268,7 @@ export default function PlaylistGenerator({ onPlaylistGenerated, templatePrompt,
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
+              <div className="space-y-2 relative">
                 <Label htmlFor="prompt">Main Prompt</Label>
                 <Textarea
                   id="prompt"
@@ -257,6 +277,24 @@ export default function PlaylistGenerator({ onPlaylistGenerated, templatePrompt,
                   onChange={(e) => setConfig(prev => ({ ...prev, prompt: e.target.value }))}
                   className="min-h-[100px]"
                 />
+                {promptSuggestions.length > 0 && (
+                  <ul className="absolute z-10 w-full bg-popover border mt-1 rounded-md max-h-40 overflow-y-auto">
+                    {promptSuggestions.map((s) => (
+                      <li key={s}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setConfig(prev => ({ ...prev, prompt: s }));
+                            setPromptSuggestions([]);
+                          }}
+                          className="w-full text-left px-2 py-1 hover:bg-muted"
+                        >
+                          {s}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
               
               <div className="grid grid-cols-2 gap-4">
