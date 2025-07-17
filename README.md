@@ -54,8 +54,27 @@ An intelligent playlist generation tool that creates custom Spotify playlists us
 
 ## Getting Started
 
-The project is a typical Node + React monorepo. Follow these steps to get a local
-environment running.
+The project is a typical Node + React monorepo. If you just want to try it out,
+follow the quick start below. For a more detailed guide, see the full
+instructions that follow.
+
+### Quick Start
+
+```bash
+git clone https://github.com/your-username/promptify.git
+cd promptify
+npm install
+cp .env.example .env   # fill in Spotify and OpenAI keys
+npm run db:push        # set up the database
+npm run dev
+```
+
+Then open <http://localhost:5000> in your browser and sign in with Spotify.
+
+---
+
+Follow the steps below if you need more explanation or are setting up for
+development.
 
 ### 1. Prerequisites
 

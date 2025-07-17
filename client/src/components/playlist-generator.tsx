@@ -204,10 +204,14 @@ export default function PlaylistGenerator({ onPlaylistGenerated, templatePrompt,
   };
   
   const addToArray = (field: keyof PlaylistConfig, value: string) => {
-    setConfig(prev => ({
-      ...prev,
-      [field]: [...(prev[field] as string[]), value],
-    }));
+    setConfig(prev => {
+      const arr = prev[field] as string[];
+      if (arr.includes(value)) return prev;
+      return {
+        ...prev,
+        [field]: [...arr, value],
+      };
+    });
   };
   
   const removeFromArray = (field: keyof PlaylistConfig, index: number) => {
@@ -633,7 +637,7 @@ export default function PlaylistGenerator({ onPlaylistGenerated, templatePrompt,
                   />
                   <div className="flex flex-wrap gap-1">
                     {config.seedArtists.map((artist, index) => (
-                      <Badge key={index} variant="secondary" className="cursor-pointer" onClick={() => removeFromArray('seedArtists', index)}>
+                      <Badge key={artist} variant="secondary" className="cursor-pointer" onClick={() => removeFromArray('seedArtists', index)}>
                         {artist} ×
                       </Badge>
                     ))}
@@ -653,7 +657,7 @@ export default function PlaylistGenerator({ onPlaylistGenerated, templatePrompt,
                   />
                   <div className="flex flex-wrap gap-1">
                     {config.seedGenres.map((genre, index) => (
-                      <Badge key={index} variant="secondary" className="cursor-pointer" onClick={() => removeFromArray('seedGenres', index)}>
+                      <Badge key={genre} variant="secondary" className="cursor-pointer" onClick={() => removeFromArray('seedGenres', index)}>
                         {genre} ×
                       </Badge>
                     ))}
@@ -780,7 +784,7 @@ export default function PlaylistGenerator({ onPlaylistGenerated, templatePrompt,
                 />
                 <div className="flex flex-wrap gap-1">
                   {config.styleFusion.map((style, index) => (
-                    <Badge key={index} variant="secondary" className="cursor-pointer" onClick={() => removeFromArray('styleFusion', index)}>
+                    <Badge key={style} variant="secondary" className="cursor-pointer" onClick={() => removeFromArray('styleFusion', index)}>
                       {style} ×
                     </Badge>
                   ))}
