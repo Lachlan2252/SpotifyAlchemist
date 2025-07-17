@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { type Playlist } from "@shared/schema";
+import { type Playlist } from "../../../shared/schema";
 
 interface PlaylistActionsProps {
   currentPlaylist: Playlist & { tracks: any[] };

@@ -7,11 +7,14 @@ import PlaylistEditor from "@/components/playlist-editor";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { Playlist, Track } from "../../../shared/schema";
+
+type PlaylistWithTracks = Playlist & { tracks: Track[] };
 
 export default function PlaylistDisplay() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [playlistState, setPlaylistState] = useState<any>(null);
+  const [playlistState, setPlaylistState] = useState<PlaylistWithTracks | null>(null);
 
   const { data: currentPlaylist, isLoading } = useQuery({
     queryKey: ["/api/playlists", "current"],
@@ -81,35 +84,37 @@ export default function PlaylistDisplay() {
     return null;
   }
 
+  const playlist = currentPlaylist as PlaylistWithTracks;
+
   return (
     <div id="playlists" className="space-y-8">
       <div className="spotify-gray rounded-xl p-6 mb-8">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center">
             <img 
-              src={currentPlaylist.imageUrl || "https://images.unsplash.com/photo-1518837695005-2083093ee35b?ixlib=rb-4.0.3&auto=format&fit=crop&w=160&h=160"} 
+              src={playlist.imageUrl || "https://images.unsplash.com/photo-1518837695005-2083093ee35b?ixlib=rb-4.0.3&auto=format&fit=crop&w=160&h=160"} 
               alt="Generated playlist cover" 
               className="w-20 h-20 rounded-lg object-cover"
             />
             <div className="ml-4">
-              <h3 className="text-xl font-bold">{currentPlaylist.name}</h3>
-              <p className="text-gray-400">{currentPlaylist.description}</p>
+              <h3 className="text-xl font-bold">{playlist.name}</h3>
+              <p className="text-gray-400">{playlist.description}</p>
               <p className="text-sm text-gray-500 mt-1">
-                {currentPlaylist.tracks.length} songs
+                {playlist.tracks?.length || 0} songs
               </p>
             </div>
           </div>
           <div className="flex items-center space-x-3">
             <Button
-              onClick={() => saveToSpotify.mutate(currentPlaylist.id)}
-              disabled={saveToSpotify.isPending || currentPlaylist.spotifyId}
+              onClick={() => saveToSpotify.mutate(playlist.id)}
+              disabled={saveToSpotify.isPending || !!playlist.spotifyId}
               className="spotify-green hover:bg-green-600 text-white px-6 py-2 rounded-full font-medium transition-colors"
             >
               <i className="fas fa-plus mr-2"></i>
-              {currentPlaylist.spotifyId ? "Saved" : saveToSpotify.isPending ? "Saving..." : "Save to Spotify"}
+              {playlist.spotifyId ? "Saved" : saveToSpotify.isPending ? "Saving..." : "Save to Spotify"}
             </Button>
             <Button
-              onClick={() => regeneratePlaylist.mutate(currentPlaylist.prompt)}
+              onClick={() => regeneratePlaylist.mutate(playlist.prompt)}
               disabled={regeneratePlaylist.isPending}
               className="spotify-lightgray hover-spotify-gray text-white p-2 rounded-full transition-colors"
             >
@@ -118,10 +123,10 @@ export default function PlaylistDisplay() {
           </div>
         </div>
 
-        <TrackList tracks={currentPlaylist.tracks} />
+        <TrackList tracks={playlist.tracks || []} />
         
         <PlaylistEditor 
-          playlist={currentPlaylist} 
+          playlistId={playlist.id} 
           onPlaylistUpdate={(updatedPlaylist) => {
             setPlaylistState(updatedPlaylist);
             queryClient.setQueryData(["/api/playlists", "current"], updatedPlaylist);
@@ -129,7 +134,7 @@ export default function PlaylistDisplay() {
         />
       </div>
 
-      <PlaylistActions currentPlaylist={currentPlaylist} />
+      <PlaylistActions currentPlaylist={playlist} />
     </div>
   );
 }

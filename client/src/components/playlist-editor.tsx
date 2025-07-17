@@ -41,11 +41,10 @@ export default function PlaylistEditor({ playlistId, onPlaylistUpdate }: Playlis
 
   const editPlaylist = useMutation({
     mutationFn: async (command: string) => {
-      const response = await apiRequest(`/api/playlists/${playlistId}/edit`, {
-        method: "POST",
-        body: { command },
+      const response = await apiRequest("POST", `/api/playlists/${playlistId}/edit`, {
+        command,
       });
-      return response;
+      return response.json();
     },
     onSuccess: (data) => {
       const assistantMessage: EditMessage = {

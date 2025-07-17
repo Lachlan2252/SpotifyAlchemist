@@ -345,7 +345,7 @@ export default function AdvancedPlaylistEditor({ playlist, onPlaylistUpdate }: A
                     </label>
                     <Slider
                       value={energyFilter}
-                      onValueChange={setEnergyFilter}
+                      onValueChange={(value) => setEnergyFilter(value as [number, number])}
                       max={1}
                       min={0}
                       step={0.1}
@@ -359,7 +359,7 @@ export default function AdvancedPlaylistEditor({ playlist, onPlaylistUpdate }: A
                     </label>
                     <Slider
                       value={bpmFilter}
-                      onValueChange={setBpmFilter}
+                      onValueChange={(value) => setBpmFilter(value as [number, number])}
                       max={200}
                       min={60}
                       step={1}
@@ -373,7 +373,7 @@ export default function AdvancedPlaylistEditor({ playlist, onPlaylistUpdate }: A
                     </label>
                     <Slider
                       value={moodFilter}
-                      onValueChange={setMoodFilter}
+                      onValueChange={(value) => setMoodFilter(value as [number, number])}
                       max={1}
                       min={0}
                       step={0.1}

@@ -97,6 +97,7 @@ export class PlaylistEditor {
         const afterYear = command.parameters.after_year;
         const beforeCount = filteredTracks.length;
         filteredTracks = filteredTracks.filter(track => {
+          if (!track.releaseDate) return true; // Keep tracks without release date
           const year = new Date(track.releaseDate).getFullYear();
           if (beforeYear && year < beforeYear) return false;
           if (afterYear && year > afterYear) return false;
@@ -110,7 +111,7 @@ export class PlaylistEditor {
         const beforeGenreCount = filteredTracks.length;
         filteredTracks = filteredTracks.filter(track => 
           !excludeGenres.some((genre: string) => 
-            track.genres?.some(g => g.toLowerCase().includes(genre.toLowerCase()))
+            Array.isArray(track.genres) && track.genres.some((g: string) => g.toLowerCase().includes(genre.toLowerCase()))
           )
         );
         changes.push(`Removed ${beforeGenreCount - filteredTracks.length} tracks from excluded genres`);
@@ -191,8 +192,8 @@ export class PlaylistEditor {
 
       case 'sort_by_year':
         sortedTracks.sort((a, b) => {
-          const yearA = new Date(a.releaseDate).getFullYear();
-          const yearB = new Date(b.releaseDate).getFullYear();
+          const yearA = a.releaseDate ? new Date(a.releaseDate).getFullYear() : 0;
+          const yearB = b.releaseDate ? new Date(b.releaseDate).getFullYear() : 0;
           return yearB - yearA;
         });
         changes.push('Sorted by release year (newest first)');
