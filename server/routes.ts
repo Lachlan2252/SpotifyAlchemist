@@ -86,6 +86,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/import-playlist", async (req, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const { playlist } = z.object({ playlist: z.string().min(1) }).parse(req.body);
+
+      const user = await storage.getUser(req.session.userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const playlistId = spotifyService.parsePlaylistId(playlist);
+      const spPlaylist = await spotifyService.getPlaylist(user.accessToken, playlistId);
+      const spTracks = await spotifyService.getPlaylistTracks(user.accessToken, playlistId);
+
+      const local = await storage.createPlaylist({
+        userId: user.id,
+        name: spPlaylist.name,
+        description: spPlaylist.description || "",
+        prompt: `import:${playlistId}`,
+        trackCount: spTracks.length,
+        isPublic: false,
+      });
+
+      for (let i = 0; i < spTracks.length; i++) {
+        const t = spTracks[i];
+        await storage.addTrackToPlaylist({
+          playlistId: local.id,
+          spotifyId: t.id,
+          name: t.name,
+          artist: t.artists[0]?.name || "Unknown Artist",
+          album: t.album.name,
+          duration: t.duration_ms,
+          imageUrl: t.album.images[0]?.url || null,
+          previewUrl: t.preview_url,
+          position: i,
+        });
+      }
+
+      const full = await storage.getPlaylistWithTracks(local.id);
+      res.json(full);
+    } catch (error) {
+      console.error("Import playlist error:", error);
+      res.status(500).json({ message: "Failed to import playlist" });
+    }
+  });
+
   app.post("/api/assistant", async (req, res) => {
     try {
       const { message } = z.object({ message: z.string().min(1).max(500) }).parse(req.body);
@@ -802,6 +851,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Follow-up prompt error:", error);
       res.status(500).json({ message: "Failed to process follow-up" });
+    }
+  });
+
+  app.post("/api/playlists/:id/advanced-edit", async (req, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const playlistId = parseInt(req.params.id);
+      const { prompt } = z.object({ prompt: z.string().min(1).max(500) }).parse(req.body);
+      const playlist = await storage.getPlaylistWithTracks(playlistId);
+      if (!playlist || playlist.userId !== req.session.userId) {
+        return res.status(404).json({ message: "Playlist not found" });
+      }
+
+      const { tracks: newTracks, explanation, changes } = await playlistEditor.processCommand({
+        tracks: playlist.tracks,
+        command: prompt,
+      });
+
+      const current = new Map(playlist.tracks.map(t => [t.spotifyId, t]));
+      let pos = 0;
+      for (const t of newTracks) {
+        const existing = current.get(t.spotifyId);
+        if (existing) {
+          await storage.updateTrack(existing.id, { position: pos });
+          current.delete(t.spotifyId);
+          pos++;
+        }
+      }
+      for (const remaining of Array.from(current.values())) {
+        await storage.removeTrackFromPlaylist(playlistId, remaining.id);
+      }
+
+      await storage.updatePlaylist(playlistId, { trackCount: pos });
+
+      const updated = await storage.getPlaylistWithTracks(playlistId);
+      res.json({ playlist: updated, explanation, changes });
+    } catch (error) {
+      console.error("Advanced edit error:", error);
+      res.status(500).json({ message: "Failed to apply advanced edit" });
     }
   });
 

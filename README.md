@@ -15,6 +15,7 @@ An intelligent playlist generation tool that creates custom Spotify playlists us
 - **Synonym Support**: Words like "hype" or "banger" imply high energy
 - **Cover Art Suggestions**: GPT proposes ideas for playlist artwork
 - **Export Tools**: Download playlists as JSON, CSV, or plain text
+- **Import & Edit**: Load any Spotify playlist by ID or URL and apply advanced AI-driven modifications
 
 ## Tech Stack
 
@@ -112,6 +113,7 @@ Open <http://localhost:5000> in your browser and you should see Promptify.
 - "I need epic workout music with heavy bass and high energy"
 - "Make me a nostalgic 90s road trip playlist"
 - "Dark villain origin story vibes with haunting melodies"
+- "Import a Spotify playlist then say: Remove sad songs and make this more upbeat"
 
 ## Development
 

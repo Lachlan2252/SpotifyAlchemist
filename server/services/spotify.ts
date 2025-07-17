@@ -277,6 +277,31 @@ export class SpotifyService {
     return data.items.map((item: any) => item.track);
   }
 
+  parsePlaylistId(idOrUrl: string): string {
+    if (idOrUrl.includes('spotify.com')) {
+      const match = idOrUrl.match(/playlist\/(\w+)/);
+      if (match) return match[1];
+    }
+    if (idOrUrl.startsWith('spotify:playlist:')) {
+      return idOrUrl.split(':')[2];
+    }
+    return idOrUrl;
+  }
+
+  async getPlaylist(accessToken: string, playlistId: string): Promise<SpotifyPlaylist> {
+    const response = await fetch(`https://api.spotify.com/v1/playlists/${playlistId}`, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to get playlist: ${response.statusText}`);
+    }
+
+    return response.json();
+  }
+
   async getAudioFeatures(accessToken: string, trackIds: string[]): Promise<any[]> {
     const ids = trackIds.join(',');
     const response = await fetch(`https://api.spotify.com/v1/audio-features?ids=${ids}`, {
