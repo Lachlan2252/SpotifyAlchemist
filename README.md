@@ -35,28 +35,58 @@ An intelligent playlist generation tool that creates custom Spotify playlists us
 
 ## Getting Started
 
-### Prerequisites
-- Node.js 18+ 
-- PostgreSQL database (or use Neon for serverless)
-- Spotify Developer Account
-- OpenAI API Key
+The project is a typical Node + React monorepo. Follow these steps to get a local
+environment running.
 
-### Environment Variables
-Create a `.env` file with:
-```
-DATABASE_URL=your_postgresql_connection_string
-SPOTIFY_CLIENT_ID=your_spotify_client_id
-SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
-SPOTIFY_REDIRECT_URI=http://localhost:5000/api/auth/spotify/callback
-OPENAI_API_KEY=your_openai_api_key
+### 1. Prerequisites
+
+- **Node.js 18+**
+- **PostgreSQL** (you can also use [Neon](https://neon.tech/) for a free
+  serverless database)
+- **Spotify Developer account** for OAuth credentials
+- **OpenAI API key** for playlist generation
+
+### 2. Clone & Install
+
+```bash
+git clone https://github.com/your-username/promptify.git
+cd promptify
+npm install
 ```
 
-### Installation
-1. Clone the repository
-2. Install dependencies: `npm install`
-3. Set up your environment variables
-4. Run database migrations: `npm run db:push`
-5. Start the development server: `npm run dev`
+### 3. Configure Environment
+
+1. Copy `.env.example` to `.env`:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+2. Fill in the values:
+   - `DATABASE_URL` – connection string to your PostgreSQL database
+   - `SPOTIFY_CLIENT_ID` and `SPOTIFY_CLIENT_SECRET` – from the Spotify
+     Developer Dashboard
+   - `SPOTIFY_REDIRECT_URI` – OAuth callback URL
+   - `OPENAI_API_KEY` – your OpenAI API key
+   - `SESSION_SECRET` – any random string
+
+### 4. Database Setup
+
+Run the migrations to create the required tables:
+
+```bash
+npm run db:push
+```
+
+### 5. Start the App
+
+Launch the development server which runs both the API and the React client:
+
+```bash
+npm run dev
+```
+
+Open <http://localhost:5000> in your browser and you should see Promptify.
 
 ### Spotify App Setup
 1. Go to [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
