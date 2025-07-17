@@ -92,7 +92,7 @@ export default function PromptGenerator() {
               onClick={() => useSuggestion(suggestion)}
               className="spotify-lightgray hover-spotify-gray text-sm px-4 py-2 rounded-full transition-colors border-gray-600 hover:border-gray-500"
             >
-              "{suggestion}"
+              {suggestion}
             </Button>
           ))}
         </div>
