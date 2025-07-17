@@ -220,6 +220,78 @@ export class SpotifyService {
     const data = await response.json();
     return data.items.map((item: any) => item.track);
   }
+
+  async searchArtists(accessToken: string, query: string, limit = 1): Promise<Array<{ id: string; name: string }>> {
+    const params = new URLSearchParams({
+      q: query,
+      type: 'artist',
+      limit: limit.toString(),
+    });
+
+    const response = await fetch(`https://api.spotify.com/v1/search?${params}`, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to search artists: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.artists.items;
+  }
+
+  async getRecommendations(accessToken: string, params: Record<string, any>): Promise<SpotifyTrack[]> {
+    const search = new URLSearchParams();
+    for (const [key, value] of Object.entries(params)) {
+      if (value === undefined || value === null) continue;
+      if (Array.isArray(value)) {
+        if (value.length > 0) search.append(key, value.join(','));
+      } else {
+        search.append(key, String(value));
+      }
+    }
+
+    const response = await fetch(`https://api.spotify.com/v1/recommendations?${search.toString()}`, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to get recommendations: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.tracks;
+  }
+
+  async getAudioFeatures(accessToken: string, trackIds: string[]): Promise<any[]> {
+    const chunks: string[][] = [];
+    for (let i = 0; i < trackIds.length; i += 100) {
+      chunks.push(trackIds.slice(i, i + 100));
+    }
+
+    const results: any[] = [];
+    for (const chunk of chunks) {
+      const ids = chunk.join(',');
+      const response = await fetch(`https://api.spotify.com/v1/audio-features?ids=${ids}`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to get audio features: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      results.push(...(data.audio_features || []));
+    }
+
+    return results;
+  }
 }
 
 export const spotifyService = new SpotifyService();

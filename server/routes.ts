@@ -5,6 +5,7 @@ import { spotifyService } from "./services/spotify";
 import { generatePlaylistFromPrompt, generateAdvancedPlaylistFromPrompt, modifyPlaylist } from "./services/openai";
 import { PlaylistEditor } from "./services/playlist-editor";
 import { z } from "zod";
+import { franc } from "franc-min";
 
 // Extend express session to include userId
 declare module "express-session" {
@@ -173,59 +174,128 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const config = req.body;
-      
+      const debugMode = !!config.debug;
+      const debug: any = { filtersUsed: {}, rejected: [] };
+
       const user = await storage.getUser(req.session.userId);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
 
-      // Generate playlist with advanced configuration
       const playlistData = await generateAdvancedPlaylistFromPrompt(config);
 
-      // Search for tracks using Spotify API with advanced filters
-      const tracks: any[] = [];
-      for (const query of playlistData.searchQueries) {
+      const seedArtistIds: string[] = [];
+      for (const name of (config.seedArtists || []).slice(0, 5)) {
         try {
-          const searchResults = await spotifyService.searchTracks(user.accessToken, query, 5);
-          tracks.push(...searchResults);
-        } catch (error) {
-          console.error(`Search failed for query: ${query}`, error);
-        }
+          const results = await spotifyService.searchArtists(user.accessToken, name, 1);
+          if (results[0]) seedArtistIds.push(results[0].id);
+        } catch {}
       }
 
-      // Remove duplicates and apply advanced filtering
-      const uniqueTracks = tracks.filter((track, index, self) => 
-        index === self.findIndex(t => t.id === track.id)
-      ).slice(0, config.targetTrackCount || 25);
+      const seedTrackIds: string[] = [];
+      for (const name of (config.includeSpecificTracks || []).slice(0, 5)) {
+        try {
+          const results = await spotifyService.searchTracks(user.accessToken, name, 1);
+          if (results[0]) seedTrackIds.push(results[0].id);
+        } catch {}
+      }
 
-      // Create playlist in database with advanced configuration
+      const recParams: any = {
+        limit: Math.min(100, (config.targetTrackCount || 20) * 2),
+        seed_artists: seedArtistIds.slice(0, 5),
+        seed_genres: (config.seedGenres || []).slice(0, 5 - seedArtistIds.length - seedTrackIds.length),
+        seed_tracks: seedTrackIds.slice(0, 5 - seedArtistIds.length - (config.seedGenres || []).length),
+        min_tempo: Math.max(0, (config.targetTempo || 120) - 20),
+        max_tempo: Math.min(250, (config.targetTempo || 120) + 20),
+        min_energy: Math.max(0, (config.targetEnergy || 0.5) - 0.2),
+        max_energy: Math.min(1, (config.targetEnergy || 0.5) + 0.2),
+        min_valence: Math.max(0, (config.targetValence || 0.5) - 0.2),
+        max_valence: Math.min(1, (config.targetValence || 0.5) + 0.2),
+        min_popularity: 0,
+        max_popularity: config.popularityThreshold || 100,
+      };
+
+      debug.filtersUsed = recParams;
+
+      const recommended = await spotifyService.getRecommendations(user.accessToken, recParams);
+
+      const features = await spotifyService.getAudioFeatures(user.accessToken, recommended.map((t: any) => t.id));
+      const featureMap: Record<string, any> = {};
+      features.forEach(f => { if (f && f.id) featureMap[f.id] = f; });
+
+      const finalTracks: any[] = [];
+      const seen = new Set<string>();
+
+      for (const track of recommended) {
+        if (finalTracks.length >= (config.targetTrackCount || 20)) break;
+        if (seen.has(track.id)) continue;
+        seen.add(track.id);
+        const f = featureMap[track.id];
+        if (!f) continue;
+
+        if (f.tempo < recParams.min_tempo || f.tempo > recParams.max_tempo) { debug.rejected.push({ id: track.id, reason: 'tempo' }); continue; }
+        if (f.energy < recParams.min_energy || f.energy > recParams.max_energy) { debug.rejected.push({ id: track.id, reason: 'energy' }); continue; }
+        if (f.valence < recParams.min_valence || f.valence > recParams.max_valence) { debug.rejected.push({ id: track.id, reason: 'valence' }); continue; }
+        if (typeof track.popularity === 'number' && (track.popularity < recParams.min_popularity || track.popularity > recParams.max_popularity)) { debug.rejected.push({ id: track.id, reason: 'popularity' }); continue; }
+
+        const releaseYear = parseInt((track.album as any).release_date?.slice(0,4) || '0', 10);
+        if (config.yearRangeStart && releaseYear < config.yearRangeStart) { debug.rejected.push({ id: track.id, reason: 'year' }); continue; }
+        if (config.yearRangeEnd && releaseYear > config.yearRangeEnd) { debug.rejected.push({ id: track.id, reason: 'year' }); continue; }
+
+        const title = track.name.toLowerCase();
+        if (/live|remix|sped up|slowed/.test(title)) { debug.rejected.push({ id: track.id, reason: 'title' }); continue; }
+
+        if (config.languageSpecific) {
+          const lang = franc(`${track.name} ${track.artists[0]?.name || ''}`);
+          if (lang && lang !== 'und' && lang !== config.languageSpecific.slice(0,3).toLowerCase()) { debug.rejected.push({ id: track.id, reason: 'language' }); continue; }
+        }
+
+        finalTracks.push(track);
+      }
+
       const playlist = await storage.createPlaylist({
         userId: user.id,
         name: config.name || playlistData.name,
         description: config.description || playlistData.description,
         prompt: config.prompt,
-        trackCount: uniqueTracks.length,
+        trackCount: finalTracks.length,
         isPublic: false,
-        ...config, // Include all advanced configuration
+        ...config,
       });
 
-      // Add tracks to database
-      for (let i = 0; i < uniqueTracks.length; i++) {
-        const track = uniqueTracks[i];
+      const featureList = await spotifyService.getAudioFeatures(user.accessToken, finalTracks.map((t: any) => t.id));
+      const featureMap2: Record<string, any> = {};
+      featureList.forEach(f => { if (f && f.id) featureMap2[f.id] = f; });
+
+      for (let i = 0; i < finalTracks.length; i++) {
+        const track = finalTracks[i];
+        const f = featureMap2[track.id];
         await storage.addTrackToPlaylist({
           playlistId: playlist.id,
           spotifyId: track.id,
           name: track.name,
-          artist: track.artists[0]?.name || "Unknown Artist",
+          artist: track.artists[0]?.name || 'Unknown Artist',
           album: track.album.name,
           duration: track.duration_ms,
           imageUrl: track.album.images[0]?.url || null,
           previewUrl: track.preview_url,
           position: i,
+          energy: f?.energy,
+          danceability: f?.danceability,
+          acousticness: f?.acousticness,
+          instrumentalness: f?.instrumentalness,
+          liveness: f?.liveness,
+          speechiness: f?.speechiness,
+          valence: f?.valence,
+          tempo: f?.tempo,
+          audioKey: f?.key,
+          musicalMode: f?.mode,
+          loudness: f?.loudness,
+          popularity: track.popularity,
+          releaseDate: (track.album as any).release_date,
         });
       }
 
-      // Save recent prompt
       await storage.addRecentPrompt({
         userId: user.id,
         prompt: config.prompt,
@@ -233,7 +303,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       const fullPlaylist = await storage.getPlaylistWithTracks(playlist.id);
-      res.json(fullPlaylist);
+      if (debugMode) {
+        res.json({ ...fullPlaylist, debug });
+      } else {
+        res.json(fullPlaylist);
+      }
     } catch (error) {
       console.error("Generate advanced playlist error:", error);
       res.status(500).json({ message: "Failed to generate advanced playlist" });
