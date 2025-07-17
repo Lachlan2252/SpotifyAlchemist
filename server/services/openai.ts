@@ -37,6 +37,17 @@ export interface TrackModificationResponse {
   reasoning: string;
 }
 
+export interface PlaylistCriteria {
+  seed_genres: string[];
+  seed_artists: string[];
+  audio_features: {
+    target_valence: number;
+    target_energy: number;
+    target_danceability: number;
+    target_tempo: number;
+  };
+}
+
 export async function generatePlaylistFromPrompt(request: PlaylistRequest): Promise<PlaylistResponse> {
   try {
     const systemPrompt = `You are a music expert AI that creates Spotify playlists based on natural language descriptions. 
@@ -145,6 +156,66 @@ export async function generateCompletion(systemPrompt: string, userPrompt: strin
   } catch (error) {
     console.error("OpenAI API error:", error);
     throw new Error("Failed to generate completion: " + (error as Error).message);
+  }
+}
+
+export async function get_playlist_criteria_from_prompt(prompt: string): Promise<PlaylistCriteria> {
+  try {
+    const systemPrompt = `You are a Music Expert AI with deep knowledge of musical genres, artists, and audio characteristics. 
+    Analyze the user's text prompt and extract structured criteria for creating a Spotify playlist using the Spotify Web API.
+    
+    Your task is to identify:
+    1. Relevant music genres (up to 3) that best match the prompt
+    2. Relevant artist names (up to 2) that fit the described style or mood
+    3. Audio feature targets that align with the described characteristics
+    
+    Audio features should be values between 0.0 and 1.0, except tempo which is in BPM:
+    - target_valence: Musical positiveness (0.0 = sad/negative, 1.0 = happy/positive)
+    - target_energy: Energy level (0.0 = low energy, 1.0 = high energy)
+    - target_danceability: How suitable for dancing (0.0 = not danceable, 1.0 = very danceable)
+    - target_tempo: Tempo in beats per minute (typical range: 60-200 BPM)
+    
+    Return a JSON object with this exact structure:
+    {
+      "seed_genres": ["genre1", "genre2", "genre3"],
+      "seed_artists": ["artist1", "artist2"],
+      "audio_features": {
+        "target_valence": 0.5,
+        "target_energy": 0.5,
+        "target_danceability": 0.5,
+        "target_tempo": 120
+      }
+    }
+    
+    Base your analysis on the mood, style, energy level, and any specific references in the prompt.
+    Use standard Spotify genre names and well-known artist names.`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: prompt }
+      ],
+      response_format: { type: "json_object" },
+      temperature: 0.7,
+    });
+
+    const result = JSON.parse(response.choices[0].message.content || "{}");
+    
+    // Validate and normalize the response
+    return {
+      seed_genres: Array.isArray(result.seed_genres) ? result.seed_genres.slice(0, 3) : [],
+      seed_artists: Array.isArray(result.seed_artists) ? result.seed_artists.slice(0, 2) : [],
+      audio_features: {
+        target_valence: Math.max(0.0, Math.min(1.0, result.audio_features?.target_valence || 0.5)),
+        target_energy: Math.max(0.0, Math.min(1.0, result.audio_features?.target_energy || 0.5)),
+        target_danceability: Math.max(0.0, Math.min(1.0, result.audio_features?.target_danceability || 0.5)),
+        target_tempo: Math.max(60, Math.min(200, result.audio_features?.target_tempo || 120)),
+      }
+    };
+  } catch (error) {
+    console.error("OpenAI API error:", error);
+    throw new Error("Failed to get playlist criteria from prompt: " + (error as Error).message);
   }
 }
 
