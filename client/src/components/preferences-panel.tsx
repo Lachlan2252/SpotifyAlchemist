@@ -18,6 +18,7 @@ export default function PreferencesPanel() {
   const [bannedTerms, setBannedTerms] = useState("");
   const [bannedArtists, setBannedArtists] = useState("");
   const [bannedGenres, setBannedGenres] = useState("");
+  const [openaiKey, setOpenaiKey] = useState("");
 
   useEffect(() => {
     if (data) {
@@ -27,7 +28,17 @@ export default function PreferencesPanel() {
       setBannedArtists((data.bannedArtists || []).join(", "));
       setBannedGenres((data.bannedGenres || []).join(", "));
     }
+    const storedKey = localStorage.getItem("openai_api_key");
+    if (storedKey) setOpenaiKey(storedKey);
   }, [data]);
+
+  useEffect(() => {
+    if (openaiKey) {
+      localStorage.setItem("openai_api_key", openaiKey);
+    } else {
+      localStorage.removeItem("openai_api_key");
+    }
+  }, [openaiKey]);
 
   const savePrefs = useMutation({
     mutationFn: async () => {
@@ -71,6 +82,16 @@ export default function PreferencesPanel() {
       <div>
         <label className="text-sm">Banned Genres</label>
         <Input value={bannedGenres} onChange={e => setBannedGenres(e.target.value)} placeholder="genres to exclude" />
+      </div>
+      <div>
+        <label className="text-sm">OpenAI API Key</label>
+        <Input
+          value={openaiKey}
+          onChange={e => setOpenaiKey(e.target.value)}
+          placeholder="sk-..."
+          type="password"
+        />
+        <p className="text-xs text-gray-400 mt-1">Stored locally in your browser</p>
       </div>
       <Button onClick={() => savePrefs.mutate()} disabled={savePrefs.isPending}>
         {savePrefs.isPending ? "Saving..." : "Save"}
