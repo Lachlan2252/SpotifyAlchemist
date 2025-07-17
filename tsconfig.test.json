@@ -1,8 +1,5 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "types": ["node", "vite/client", "jest", "supertest"]
-  },
-  "include": ["server/tests/**/*.ts"],
   "exclude": []
 }

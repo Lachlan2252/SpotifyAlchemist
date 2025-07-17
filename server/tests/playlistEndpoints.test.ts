@@ -3,12 +3,13 @@ import express from 'express';
 import session from 'express-session';
 import { jest } from '@jest/globals';
 
-const getUser = jest.fn();
-const createPlaylist = jest.fn();
-const addTrackToPlaylist = jest.fn();
-const addRecentPrompt = jest.fn();
-const getPlaylistWithTracks = jest.fn();
-const updatePlaylist = jest.fn();
+const getUser = jest.fn<any>();
+const createPlaylist = jest.fn<any>();
+const addTrackToPlaylist = jest.fn<any>();
+const addRecentPrompt = jest.fn<any>();
+const getPlaylistWithTracks = jest.fn<any>();
+const updatePlaylist = jest.fn<any>();
+const getUserPreferences = jest.fn<any>();
 
 jest.mock('../storage', () => ({
   storage: {
@@ -18,11 +19,12 @@ jest.mock('../storage', () => ({
     addRecentPrompt,
     getPlaylistWithTracks,
     updatePlaylist,
+    getUserPreferences,
   }
 }));
 
-const generatePlaylistFromPrompt = jest.fn();
-const get_playlist_criteria_from_prompt = jest.fn();
+const generatePlaylistFromPrompt = jest.fn<any>();
+const get_playlist_criteria_from_prompt = jest.fn<any>();
 
 jest.mock('../services/openai', () => ({
   generatePlaylistFromPrompt,
@@ -31,9 +33,9 @@ jest.mock('../services/openai', () => ({
   get_playlist_criteria_from_prompt,
 }));
 
-const searchTracks = jest.fn();
-const getRecommendations = jest.fn();
-const getAudioFeaturesMap = jest.fn();
+const searchTracks = jest.fn<any>();
+const getRecommendations = jest.fn<any>();
+const getAudioFeaturesMap = jest.fn<any>();
 
 jest.mock('../services/spotify', () => ({
   spotifyService: {
@@ -43,7 +45,7 @@ jest.mock('../services/spotify', () => ({
   }
 }));
 
-const processCommand = jest.fn();
+const processCommand = jest.fn<any>();
 
 jest.mock('../services/playlist-editor', () => ({
   PlaylistEditor: jest.fn().mockImplementation(() => ({ processCommand }))
