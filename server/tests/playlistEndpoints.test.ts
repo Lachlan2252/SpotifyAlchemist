@@ -23,13 +23,17 @@ jest.mock('../storage', () => ({
 
 const generatePlaylistFromPrompt = jest.fn();
 const get_playlist_criteria_from_prompt = jest.fn();
+const generateCoverArt = jest.fn();
+const analyzePlaylist = jest.fn();
 
 jest.mock('../services/openai', () => ({
   generatePlaylistFromPrompt,
   generateAdvancedPlaylistFromPrompt: jest.fn(),
+  generateCoverArt,
   modifyPlaylist: jest.fn(),
   get_playlist_criteria_from_prompt,
 }));
+jest.mock("../services/analytics", () => ({ analyzePlaylist }));
 
 const searchTracks = jest.fn();
 const getRecommendations = jest.fn();
@@ -145,5 +149,39 @@ describe('playlist endpoints', () => {
     expect(res.status).toBe(200);
     expect(processCommand).toHaveBeenCalled();
     expect(res.body.explanation).toBe('ok');
+  });
+
+  test('cover art requires authentication', async () => {
+    const app = await createApp(false);
+    await request(app)
+      .post('/api/cover-art')
+      .send({ prompt: 'p' })
+      .expect(401);
+  });
+
+  test('cover art success', async () => {
+    generateCoverArt.mockResolvedValue('http://img');
+    const app = await createApp(true);
+    const res = await request(app)
+      .post('/api/cover-art')
+      .send({ prompt: 'p' });
+    expect(res.status).toBe(200);
+    expect(res.body.url).toBe('http://img');
+  });
+
+  test('analytics requires authentication', async () => {
+    const app = await createApp(false);
+    await request(app)
+      .get('/api/playlists/1/analytics')
+      .expect(401);
+  });
+
+  test('analytics success', async () => {
+    getPlaylistWithTracks.mockResolvedValue({ id: 1, userId: 1, tracks: [] });
+    analyzePlaylist.mockReturnValue({});
+    const app = await createApp(true);
+    const res = await request(app).get('/api/playlists/1/analytics');
+    expect(res.status).toBe(200);
+    expect(analyzePlaylist).toHaveBeenCalled();
   });
 });

@@ -2,7 +2,8 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { spotifyService } from "./services/spotify";
-import { generatePlaylistFromPrompt, generateAdvancedPlaylistFromPrompt, modifyPlaylist, get_playlist_criteria_from_prompt, assistantExplainFeatures, suggestPromptCompletions } from "./services/openai";
+import { generatePlaylistFromPrompt, generateAdvancedPlaylistFromPrompt, modifyPlaylist, get_playlist_criteria_from_prompt, assistantExplainFeatures, suggestPromptCompletions, generateCoverArt } from "./services/openai";
+import { analyzePlaylist } from "./services/analytics";
 import { PlaylistEditor } from "./services/playlist-editor";
 import { updateTrackSchema, type InsertUserPreferences } from "@shared/schema";
 import { z } from "zod";
@@ -134,6 +135,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to get suggestions" });
     }
   });
+  app.post("/api/cover-art", async (req, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      const { prompt, style } = z.object({ prompt: z.string().min(1).max(200), style: z.string().optional() }).parse(req.body);
+      const url = await generateCoverArt(prompt, style);
+      res.json({ url });
+    } catch (error) {
+      console.error("Cover art error:", error);
+      res.status(500).json({ message: "Failed to generate cover art" });
+    }
+  });
+
 
   // Playlist generation routes
   const generatePlaylistSchema = z.object({
@@ -618,6 +633,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to load audio features" });
     }
   });
+  app.get("/api/playlists/:id/analytics", async (req, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      const playlistId = parseInt(req.params.id);
+      const playlist = await storage.getPlaylistWithTracks(playlistId);
+      if (!playlist || playlist.userId !== req.session.userId) {
+        return res.status(404).json({ message: "Playlist not found" });
+      }
+      const stats = analyzePlaylist(playlist.tracks);
+      res.json(stats);
+    } catch (error) {
+      console.error("Analytics error:", error);
+      res.status(500).json({ message: "Failed to analyze playlist" });
+    }
+  });
+
 
   app.post("/api/playlists/:id/add-similar", async (req, res) => {
     try {
