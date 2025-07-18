@@ -22,5 +22,8 @@ vite.config.ts.*
 *.deb
 *.tar.gz
 *.zip
+
+# Allow .dmg files in client folder for easy release
+!client/*.dmg
 release/
 build/

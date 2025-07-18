@@ -21,8 +21,9 @@
     "test": "jest",
     "electron": "electron electron/main.js",
     "electron:dev": "NODE_ENV=development electron electron/main.js",
-    "electron:pack": "npm run build && electron-builder --mac --publish=never",
-    "electron:dist": "npm run build && electron-builder --mac --publish=onTagOrDraft",
+    "electron:pack": "npm run build && electron-builder --mac --publish=never && node scripts/copy-dmg-to-client.js",
+    "electron:dist": "npm run build && electron-builder --mac --publish=onTagOrDraft && node scripts/copy-dmg-to-client.js",
+    "copy-dmg": "node scripts/copy-dmg-to-client.js",
     "release:test": "bash scripts/test-release.sh"
   },
   "keywords": ["spotify", "playlist", "ai", "music", "electron", "macos", "desktop"],

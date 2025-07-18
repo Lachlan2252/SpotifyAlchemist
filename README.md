@@ -164,7 +164,8 @@ Open <http://localhost:5000> in your browser and you should see Promptify.
 - `npm run db:push` - Push database schema changes
 - `npm run db:studio` - Open database studio
 - `npm run electron:dev` - Start the desktop app in development
-- `npm run electron:pack` - Build a macOS app bundle (requires macOS)
+- `npm run electron:pack` - Build a macOS app bundle (requires macOS) and copy .dmg to client folder
+- `npm run copy-dmg` - Copy .dmg files from dist-electron to client folder for easy release
 - `npm run release:test` - Test the release build process
 
 ### Release Process
@@ -175,12 +176,15 @@ To create a new release with a downloadable DMG file:
 2. **GitHub Actions will automatically**:
    - Build the web app
    - Create a macOS DMG file
+   - Copy the DMG file to the client folder for easy access
    - Upload the DMG to GitHub Releases
    - Generate release notes
 
 Alternatively, you can manually trigger a release using the GitHub Actions workflow dispatch feature.
 
 The DMG file will be available at: https://github.com/Lachlan2252/SpotifyAlchemist/releases
+
+**For easy local access**: After building, .dmg files are automatically copied to the `client/` folder for convenient distribution and sharing.
 
 ## macOS Desktop App
 
@@ -223,6 +227,8 @@ npm install
 # Build the app
 npm run electron:pack
 ```
+
+The .dmg file will be created in the `dist-electron/` directory and automatically copied to the `client/` folder for easy access and distribution.
 
 ### Development
 
