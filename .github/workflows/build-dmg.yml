@@ -1,0 +1,43 @@
+name: Build DMG
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-dmg:
+    runs-on: macos-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          
+      - name: Make create-dmg.sh executable
+        run: chmod +x scripts/create-dmg.sh
+        
+      - name: Run create-dmg script
+        run: ./scripts/create-dmg.sh
+        
+      - name: Verify DMG files in client directory
+        run: |
+          echo "Contents of client directory:"
+          ls -la client/
+          echo "DMG files in client:"
+          ls -la client/*.dmg || echo "No DMG files found"
+          
+      - name: Upload DMG artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: SpotifyAlchemist-DMG
+          path: client/*.dmg
+          if-no-files-found: error
+          retention-days: 30
