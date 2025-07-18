@@ -42,6 +42,8 @@ jobs:
         run: |
           echo "Build artifacts in dist-electron:"
           ls -la dist-electron/ || echo "No dist-electron directory found"
+          echo "DMG files copied to client folder:"
+          ls -la client/*.dmg || echo "No .dmg files found in client folder"
           find . -name "*.dmg" -o -name "*.app" | head -10
           
       - name: Upload DMG artifacts

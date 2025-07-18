@@ -35,6 +35,10 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     echo "✅ macOS app built successfully!"
     echo "📁 Build artifacts:"
     ls -la dist-electron/
+    
+    # Copy .dmg files to client folder for easy release
+    echo "📦 Copying .dmg files to client folder..."
+    node scripts/copy-dmg-to-client.js
   else
     echo "❌ macOS app build failed!"
     exit 1
