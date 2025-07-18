@@ -1,18 +1,30 @@
 {
-  "name": "workspace",
+  "name": "spotify-alchemist",
   "version": "1.0.0",
-  "description": "An intelligent playlist generation tool that creates custom Spotify playlists using natural language prompts powered by OpenAI's GPT-4.",
-  "main": "postcss.config.js",
+  "description": "An intelligent playlist generation tool that creates custom Spotify playlists using natural language prompts powered by OpenAI's GPT-4. Now available as a native macOS desktop app with fluid UI.",
+  "main": "electron/main.js",
+  "homepage": "https://github.com/Lachlan2252/SpotifyAlchemist",
+  "author": {
+    "name": "Lachlan2252",
+    "email": "lachlan@example.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Lachlan2252/SpotifyAlchemist.git"
+  },
   "scripts": {
     "dev": "tsx server/index.ts",
     "build": "vite build",
     "preview": "vite preview",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "test": "jest"
+    "test": "jest",
+    "electron": "electron electron/main.js",
+    "electron:dev": "NODE_ENV=development electron electron/main.js",
+    "electron:pack": "npm run build && electron-builder --mac --publish=never",
+    "electron:dist": "npm run build && electron-builder --mac --publish=onTagOrDraft"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": ["spotify", "playlist", "ai", "music", "electron", "macos", "desktop"],
   "license": "ISC",
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",
@@ -89,7 +101,48 @@
   },
   "devDependencies": {
     "@types/express-session": "^1.18.2",
+    "@types/node": "^22.0.0",
     "@types/react": "^19.1.8",
-    "@types/node": "^22.0.0"
+    "electron": "^37.2.3",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.lachlan2252.spotify-alchemist",
+    "productName": "Spotify Alchemist",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "category": "public.app-category.music",
+      "icon": "electron/assets/icon.icns",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["x64", "arm64"]
+        }
+      ],
+      "darkModeSupport": true,
+      "gatekeeperAssess": false,
+      "hardenedRuntime": true,
+      "entitlements": "electron/entitlements.mac.plist",
+      "entitlementsInherit": "electron/entitlements.mac.plist"
+    },
+    "dmg": {
+      "title": "Spotify Alchemist",
+      "backgroundColor": "#1a1a2e",
+      "window": {
+        "width": 600,
+        "height": 400
+      }
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
   }
 }

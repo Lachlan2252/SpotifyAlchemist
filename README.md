@@ -165,35 +165,58 @@ Open <http://localhost:5000> in your browser and you should see Promptify.
 - `npm run db:studio` - Open database studio
 - `npm run electron:dev` - Start the desktop app in development
 - `npm run electron:pack` - Build a macOS app bundle (requires macOS)
-## Mac Desktop App
 
-Use Electron to run Promptify as a native macOS application.
+## macOS Desktop App
 
-1. `npm run electron:dev` to launch the app with the dev server.
-2. `npm run electron:pack` to create a macOS app bundle (requires macOS).
-## Downloading the Desktop App
+Spotify Alchemist is now available as a native macOS desktop application with a fluid, modern UI that takes full advantage of macOS features.
 
-If you just want to use the macOS version without building it yourself:
+### Desktop Features
+- **Native macOS Integration**: Full macOS menu bar, dock support, and window management
+- **Fluid UI**: Smooth animations, transitions, and glass morphism effects
+- **Dark Mode Support**: Automatic dark mode detection and theme switching
+- **Retina Display Optimized**: Crystal clear graphics on all Mac displays
+- **Keyboard Shortcuts**: Full keyboard navigation and shortcuts
+- **Window Management**: Proper minimize, maximize, and close behavior
+- **Vibrancy Effects**: Beautiful translucent backgrounds that adapt to the desktop
+- **Smooth Animations**: Spring-loaded animations and fluid transitions
+- **Native Notifications**: macOS-style notifications and alerts
 
-1. Visit the GitHub **Releases** page for this project.
-2. Download the latest `Promptify.dmg` file.
-3. Open the DMG and drag **Promptify** into your `Applications` folder.
+### Installation
 
+#### Option 1: Download Pre-built App
+1. Visit the [Releases](https://github.com/Lachlan2252/SpotifyAlchemist/releases) page
+2. Download the latest `SpotifyAlchemist.dmg` file
+3. Open the DMG and drag the app to your Applications folder
+4. Launch from Applications or Spotlight
 
-### Packaging a DMG Yourself
-
-If you are developing or want to build from source, you can create the DMG on a
-macOS machine:
-
+#### Option 2: Build from Source
 ```bash
+# Clone the repository
+git clone https://github.com/Lachlan2252/SpotifyAlchemist.git
+cd SpotifyAlchemist
+
+# Install dependencies
 npm install
+
+# Build the app
 npm run electron:pack
 ```
 
-The packaged `.dmg` will be available in the `dist/` directory. Open it and drag
-the **Promptify** app into `Applications` to install.
+### Development
 
-## Contributing
+To develop the desktop app:
+
+```bash
+# Start development server
+npm run dev
+
+# In another terminal, start the electron app
+npm run electron:dev
+```
+
+---
+
+## Web Version
 
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/amazing-feature`)

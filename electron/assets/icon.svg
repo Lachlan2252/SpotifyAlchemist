@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#8B2EE6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4C1D95;stop-opacity:1" />
+    </radialGradient>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="256" fill="url(#bg)"/>
+  
+  <!-- Sparkle/Music icon -->
+  <g transform="translate(256,256)">
+    <!-- Central star -->
+    <path d="M0,-60 L15,-15 L60,0 L15,15 L0,60 L-15,15 L-60,0 L-15,-15 Z" fill="white" opacity="0.9"/>
+    
+    <!-- Smaller sparkles -->
+    <circle cx="-80" cy="-40" r="8" fill="white" opacity="0.7"/>
+    <circle cx="80" cy="-40" r="8" fill="white" opacity="0.7"/>
+    <circle cx="-80" cy="40" r="8" fill="white" opacity="0.7"/>
+    <circle cx="80" cy="40" r="8" fill="white" opacity="0.7"/>
+    
+    <!-- Music note elements -->
+    <path d="M-30,-80 Q-20,-90 -10,-80 L-10,40 Q-10,50 -20,50 Q-30,50 -30,40 Z" fill="white" opacity="0.8"/>
+    <path d="M30,-80 Q40,-90 50,-80 L50,40 Q50,50 40,50 Q30,50 30,40 Z" fill="white" opacity="0.8"/>
+    <path d="M-10,-80 L50,-70 L50,-60 L-10,-70 Z" fill="white" opacity="0.8"/>
+  </g>
+</svg>
