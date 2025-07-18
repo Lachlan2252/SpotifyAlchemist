@@ -1,5 +1,6 @@
 node_modules
 dist
+dist-electron
 .DS_Store
 server/public
 vite.config.ts.*
@@ -10,3 +11,16 @@ vite.config.ts.*
 .env.development
 .cache
 .upm
+
+# Electron build artifacts
+*.dmg
+*.pkg
+*.appx
+*.exe
+*.msi
+*.rpm
+*.deb
+*.tar.gz
+*.zip
+release/
+build/
