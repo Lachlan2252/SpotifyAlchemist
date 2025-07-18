@@ -14,7 +14,7 @@ Thank you for your interest in contributing to Promptify! This document provides
 
 ### Prerequisites
 - Node.js 18+
-- PostgreSQL database (or use Neon for serverless)
+- PostgreSQL database
 - Spotify Developer Account
 - OpenAI API Key
 

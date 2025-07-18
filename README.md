@@ -31,7 +31,6 @@ An intelligent playlist generation tool that creates custom Spotify playlists us
 - **Node.js** with Express
 - **TypeScript** with ESM modules
 - **PostgreSQL** with Drizzle ORM
-- **Neon Database** (serverless PostgreSQL)
 - **Express Sessions** for authentication
 
 ### APIs & Services
@@ -79,8 +78,7 @@ development.
 ### 1. Prerequisites
 
 - **Node.js 18+**
-- **PostgreSQL** (you can also use [Neon](https://neon.tech/) for a free
-  serverless database)
+- **PostgreSQL** (local or remote instance)
 - **Spotify Developer account** for OAuth credentials
 - **OpenAI API key** for playlist generation
 
