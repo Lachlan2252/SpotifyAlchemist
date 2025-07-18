@@ -1,6 +1,6 @@
 import { generateCompletion } from './openai.js';
 import { SpotifyService } from './spotify.js';
-import { type Track } from '@shared/schema';
+import { type Track } from '../shared/schema';
 
 function isMostlyEnglish(text: string): boolean {
   const ascii = text.replace(/[^\x00-\x7F]/g, '');

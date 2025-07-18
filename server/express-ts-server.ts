@@ -42,7 +42,7 @@ app.get('*', (req: any, res: any) => {
   }
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = parseInt(process.env.PORT || '5000', 10);
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🎵 Promptify Express Server running on port ${PORT}`);
   console.log(`📡 API endpoints: http://localhost:${PORT}/api/`);

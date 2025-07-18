@@ -1,5 +1,4 @@
 import { pgTable, text, serial, integer, boolean, timestamp, jsonb, real } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 export const users = pgTable("users", {
@@ -139,35 +138,114 @@ export const userPreferences = pgTable("user_preferences", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-export const insertUserSchema = createInsertSchema(users).omit({
-  id: true,
-  createdAt: true,
+// Define Zod schemas manually since drizzle-zod is causing issues
+export const insertUserSchema = z.object({
+  spotifyId: z.string(),
+  displayName: z.string(),
+  email: z.string().optional(),
+  imageUrl: z.string().optional(),
+  accessToken: z.string(),
+  refreshToken: z.string(),
+  tokenExpiresAt: z.date(),
 });
 
-export const insertPlaylistSchema = createInsertSchema(playlists).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
+export const insertPlaylistSchema = z.object({
+  userId: z.number(),
+  spotifyId: z.string().optional(),
+  name: z.string(),
+  description: z.string().optional(),
+  prompt: z.string(),
+  imageUrl: z.string().optional(),
+  trackCount: z.number().default(0),
+  isPublic: z.boolean().default(false),
+  vibe: z.string().optional(),
+  mood: z.string().optional(),
+  scene: z.string().optional(),
+  energyScale: z.number().optional(),
+  darknessScale: z.number().optional(),
+  emotionalTone: z.string().optional(),
+  targetEnergy: z.number().optional(),
+  targetDanceability: z.number().optional(),
+  targetAcousticness: z.number().optional(),
+  targetInstrumentalness: z.number().optional(),
+  targetLiveness: z.number().optional(),
+  targetSpeechiness: z.number().optional(),
+  targetValence: z.number().optional(),
+  targetTempo: z.number().optional(),
+  audioKey: z.string().optional(),
+  musicalMode: z.string().optional(),
+  decadeFilter: z.any().optional(),
+  yearRangeStart: z.number().optional(),
+  yearRangeEnd: z.number().optional(),
+  onlyNewMusic: z.boolean().default(false),
+  onlyThrowbacks: z.boolean().default(false),
+  mixedEra: z.boolean().default(false),
+  seedArtists: z.any().optional(),
+  seedGenres: z.any().optional(),
+  includeSpecificTracks: z.any().optional(),
+  excludeArtists: z.any().optional(),
+  excludeGenres: z.any().optional(),
+  excludeTracks: z.any().optional(),
+  avoidOverplayed: z.boolean().default(false),
+  onlyUnderground: z.boolean().default(false),
+  popularityThreshold: z.number().optional(),
+  targetTrackCount: z.number().optional(),
+  targetDurationMin: z.number().optional(),
+  targetDurationMax: z.number().optional(),
+  storyArcMode: z.boolean().default(false),
+  segmentedMode: z.boolean().default(false),
+  styleFusion: z.any().optional(),
+  randomnessLevel: z.number().optional(),
+  balanceHitsGems: z.number().optional(),
+  explicitLyrics: z.string().optional(),
+  smartLyrics: z.boolean().default(false),
+  languageSpecific: z.string().optional(),
+  templateUsed: z.string().optional(),
 });
 
-export const insertTrackSchema = createInsertSchema(tracks).omit({
-  id: true,
-  createdAt: true,
+export const insertTrackSchema = z.object({
+  playlistId: z.number(),
+  spotifyId: z.string(),
+  name: z.string(),
+  artist: z.string(),
+  album: z.string(),
+  duration: z.number(),
+  imageUrl: z.string().optional(),
+  previewUrl: z.string().optional(),
+  position: z.number(),
+  energy: z.number().optional(),
+  danceability: z.number().optional(),
+  acousticness: z.number().optional(),
+  instrumentalness: z.number().optional(),
+  liveness: z.number().optional(),
+  speechiness: z.number().optional(),
+  valence: z.number().optional(),
+  tempo: z.number().optional(),
+  audioKey: z.number().optional(),
+  musicalMode: z.number().optional(),
+  loudness: z.number().optional(),
+  popularity: z.number().optional(),
+  releaseDate: z.string().optional(),
+  genres: z.any().optional(),
+  aiReasoning: z.string().optional(),
 });
 
 export const updateTrackSchema = insertTrackSchema.partial().extend({
   id: z.number(),
 });
 
-export const insertRecentPromptSchema = createInsertSchema(recentPrompts).omit({
-  id: true,
-  createdAt: true,
+export const insertRecentPromptSchema = z.object({
+  userId: z.number(),
+  prompt: z.string(),
+  playlistId: z.number().optional(),
 });
 
-export const insertUserPreferencesSchema = createInsertSchema(userPreferences).omit({
-  userId: true,
-  createdAt: true,
-  updatedAt: true,
+export const insertUserPreferencesSchema = z.object({
+  favoriteGenres: z.any().optional(),
+  favoriteArtists: z.any().optional(),
+  bannedTerms: z.any().optional(),
+  bannedArtists: z.any().optional(),
+  bannedGenres: z.any().optional(),
 });
 
 export type User = typeof users.$inferSelect;

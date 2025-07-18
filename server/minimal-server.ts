@@ -122,7 +122,7 @@ app.use("*", (req, res) => {
 });
 
 const server = createServer(app);
-const PORT = process.env.PORT || 5000;
+const PORT = parseInt(process.env.PORT || '5000', 10);
 
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`✅ Minimal server running on port ${PORT}`);
