@@ -261,10 +261,14 @@ export default function AdvancedPlaylistEditor({ playlist, onPlaylistUpdate }: A
               
               <div className="space-y-2">
                 <label className="text-white text-sm font-medium">Order</label>
-                <Select value={sortOrder} onValueChange={(value: "asc" | "desc") => {
-                  setSortOrder(value);
-                  if (sortBy) sortTracks(sortBy, value);
-                }}>
+                <Select
+                  value={sortOrder}
+                  onValueChange={(value) => {
+                    const order = value as "asc" | "desc";
+                    setSortOrder(order);
+                    if (sortBy) sortTracks(sortBy, order);
+                  }}
+                >
                   <SelectTrigger className="bg-gray-800/50 border-gray-700 text-white">
                     <SelectValue />
                   </SelectTrigger>
