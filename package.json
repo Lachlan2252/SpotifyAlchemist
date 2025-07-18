@@ -22,7 +22,8 @@
     "electron": "electron electron/main.js",
     "electron:dev": "NODE_ENV=development electron electron/main.js",
     "electron:pack": "npm run build && electron-builder --mac --publish=never",
-    "electron:dist": "npm run build && electron-builder --mac --publish=onTagOrDraft"
+    "electron:dist": "npm run build && electron-builder --mac --publish=onTagOrDraft",
+    "release:test": "bash scripts/test-release.sh"
   },
   "keywords": ["spotify", "playlist", "ai", "music", "electron", "macos", "desktop"],
   "license": "ISC",
@@ -119,7 +120,7 @@
     ],
     "mac": {
       "category": "public.app-category.music",
-      "icon": "electron/assets/icon.icns",
+      "icon": "electron/assets/icon.png",
       "target": [
         {
           "target": "dmg",

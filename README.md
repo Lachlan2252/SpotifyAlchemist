@@ -165,10 +165,32 @@ Open <http://localhost:5000> in your browser and you should see Promptify.
 - `npm run db:studio` - Open database studio
 - `npm run electron:dev` - Start the desktop app in development
 - `npm run electron:pack` - Build a macOS app bundle (requires macOS)
+- `npm run release:test` - Test the release build process
+
+### Release Process
+
+To create a new release with a downloadable DMG file:
+
+1. **Create a tag**: `git tag v1.0.0 && git push origin v1.0.0`
+2. **GitHub Actions will automatically**:
+   - Build the web app
+   - Create a macOS DMG file
+   - Upload the DMG to GitHub Releases
+   - Generate release notes
+
+Alternatively, you can manually trigger a release using the GitHub Actions workflow dispatch feature.
+
+The DMG file will be available at: https://github.com/Lachlan2252/SpotifyAlchemist/releases
 
 ## macOS Desktop App
 
 Spotify Alchemist is now available as a native macOS desktop application with a fluid, modern UI that takes full advantage of macOS features.
+
+### Download
+
+**📥 [Download the latest release](https://github.com/Lachlan2252/SpotifyAlchemist/releases/latest)**
+
+The DMG file is automatically built and uploaded to GitHub Releases whenever a new version is tagged. Simply download the latest `SpotifyAlchemist.dmg` file from the releases page.
 
 ### Desktop Features
 - **Native macOS Integration**: Full macOS menu bar, dock support, and window management

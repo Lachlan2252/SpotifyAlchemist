@@ -1,0 +1,127 @@
+name: Build and Release Desktop App
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., v1.0.0)'
+        required: true
+        default: 'v1.0.0'
+
+jobs:
+  build-and-release:
+    runs-on: macos-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+        
+      - name: Build web app
+        run: npm run build
+        env:
+          NODE_ENV: production
+          
+      - name: Build desktop app
+        run: npm run electron:pack
+        env:
+          NODE_ENV: production
+          
+      - name: List build artifacts
+        run: |
+          echo "Build artifacts in dist-electron:"
+          ls -la dist-electron/ || echo "No dist-electron directory found"
+          find . -name "*.dmg" -o -name "*.app" | head -10
+          
+      - name: Upload DMG artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macOS-dmg
+          path: dist-electron/*.dmg
+          if-no-files-found: error
+          
+      - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist-electron/*.dmg
+          name: Release ${{ github.ref_name }}
+          body: |
+            ## Spotify Alchemist ${{ github.ref_name }}
+            
+            ### macOS Desktop App
+            
+            Download the `.dmg` file below to install Spotify Alchemist on your Mac.
+            
+            **Features:**
+            - Native macOS integration with menu bar support
+            - Fluid UI with smooth animations and transitions
+            - Dark mode support with automatic theme detection
+            - Retina display optimization
+            - Keyboard shortcuts and window management
+            - Vibrancy effects and translucent backgrounds
+            
+            **Installation:**
+            1. Download the `SpotifyAlchemist.dmg` file
+            2. Open the DMG and drag the app to your Applications folder
+            3. Launch from Applications or Spotlight
+            
+            **System Requirements:**
+            - macOS 10.14 or later
+            - Compatible with both Intel and Apple Silicon Macs
+            
+            For more information, visit the [GitHub repository](https://github.com/Lachlan2252/SpotifyAlchemist).
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Manual Release (workflow_dispatch)
+        if: github.event_name == 'workflow_dispatch'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist-electron/*.dmg
+          name: Release ${{ github.event.inputs.version }}
+          tag_name: ${{ github.event.inputs.version }}
+          body: |
+            ## Spotify Alchemist ${{ github.event.inputs.version }}
+            
+            ### macOS Desktop App
+            
+            Download the `.dmg` file below to install Spotify Alchemist on your Mac.
+            
+            **Features:**
+            - Native macOS integration with menu bar support
+            - Fluid UI with smooth animations and transitions
+            - Dark mode support with automatic theme detection
+            - Retina display optimization
+            - Keyboard shortcuts and window management
+            - Vibrancy effects and translucent backgrounds
+            
+            **Installation:**
+            1. Download the `SpotifyAlchemist.dmg` file
+            2. Open the DMG and drag the app to your Applications folder
+            3. Launch from Applications or Spotlight
+            
+            **System Requirements:**
+            - macOS 10.14 or later
+            - Compatible with both Intel and Apple Silicon Macs
+            
+            For more information, visit the [GitHub repository](https://github.com/Lachlan2252/SpotifyAlchemist).
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
