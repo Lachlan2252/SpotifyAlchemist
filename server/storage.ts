@@ -1,4 +1,4 @@
-import { users, playlists, tracks, recentPrompts, userPreferences, type User, type InsertUser, type Playlist, type InsertPlaylist, type Track, type InsertTrack, type InsertRecentPrompt, type RecentPrompt, type UserPreferences, type InsertUserPreferences } from "@shared/schema";
+import { users, playlists, tracks, recentPrompts, userPreferences, type User, type InsertUser, type Playlist, type InsertPlaylist, type Track, type InsertTrack, type InsertRecentPrompt, type RecentPrompt, type UserPreferences, type InsertUserPreferences } from "../shared/schema";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
 
@@ -41,9 +41,13 @@ export class DatabaseStorage implements IStorage {
         const [updatedUser] = await db
           .update(users)
           .set({
-            ...insertUser,
+            spotifyId: insertUser.spotifyId,
+            displayName: insertUser.displayName,
             email: insertUser.email || null,
             imageUrl: insertUser.imageUrl || null,
+            accessToken: insertUser.accessToken,
+            refreshToken: insertUser.refreshToken,
+            tokenExpiresAt: insertUser.tokenExpiresAt,
           })
           .where(eq(users.id, existingUser.id))
           .returning();
@@ -53,9 +57,13 @@ export class DatabaseStorage implements IStorage {
         const [user] = await db
           .insert(users)
           .values({
-            ...insertUser,
+            spotifyId: insertUser.spotifyId,
+            displayName: insertUser.displayName,
             email: insertUser.email || null,
             imageUrl: insertUser.imageUrl || null,
+            accessToken: insertUser.accessToken,
+            refreshToken: insertUser.refreshToken,
+            tokenExpiresAt: insertUser.tokenExpiresAt,
           })
           .returning();
         return user;
@@ -68,9 +76,13 @@ export class DatabaseStorage implements IStorage {
           const [updatedUser] = await db
             .update(users)
             .set({
-              ...insertUser,
+              spotifyId: insertUser.spotifyId,
+              displayName: insertUser.displayName,
               email: insertUser.email || null,
               imageUrl: insertUser.imageUrl || null,
+              accessToken: insertUser.accessToken,
+              refreshToken: insertUser.refreshToken,
+              tokenExpiresAt: insertUser.tokenExpiresAt,
             })
             .where(eq(users.id, existingUser.id))
             .returning();
@@ -85,7 +97,9 @@ export class DatabaseStorage implements IStorage {
     const [playlist] = await db
       .insert(playlists)
       .values({
-        ...insertPlaylist,
+        userId: insertPlaylist.userId,
+        name: insertPlaylist.name,
+        prompt: insertPlaylist.prompt,
         description: insertPlaylist.description || null,
         spotifyId: insertPlaylist.spotifyId || null,
         imageUrl: insertPlaylist.imageUrl || null,
@@ -136,7 +150,13 @@ export class DatabaseStorage implements IStorage {
     const [track] = await db
       .insert(tracks)
       .values({
-        ...insertTrack,
+        playlistId: insertTrack.playlistId,
+        spotifyId: insertTrack.spotifyId,
+        name: insertTrack.name,
+        artist: insertTrack.artist,
+        album: insertTrack.album,
+        duration: insertTrack.duration,
+        position: insertTrack.position,
         imageUrl: insertTrack.imageUrl || null,
         previewUrl: insertTrack.previewUrl || null,
       })
@@ -161,7 +181,8 @@ export class DatabaseStorage implements IStorage {
     const [prompt] = await db
       .insert(recentPrompts)
       .values({
-        ...insertPrompt,
+        userId: insertPrompt.userId,
+        prompt: insertPrompt.prompt,
         playlistId: insertPrompt.playlistId || null,
       })
       .returning();
@@ -190,7 +211,13 @@ export class DatabaseStorage implements IStorage {
     if (existing) {
       const [updated] = await db
         .update(userPreferences)
-        .set(prefs)
+        .set({
+          favoriteGenres: prefs.favoriteGenres,
+          favoriteArtists: prefs.favoriteArtists,
+          bannedTerms: prefs.bannedTerms,
+          bannedArtists: prefs.bannedArtists,
+          bannedGenres: prefs.bannedGenres,
+        })
         .where(eq(userPreferences.userId, userId))
         .returning();
       return updated;

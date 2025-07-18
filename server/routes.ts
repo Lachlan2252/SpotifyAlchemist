@@ -3,9 +3,9 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { spotifyService } from "./services/spotify";
 import { parsePromptFilters } from "./utils/prompt";
-import { generatePlaylistFromPrompt, generateAdvancedPlaylistFromPrompt, modifyPlaylist, get_playlist_criteria_from_prompt, assistantExplainFeatures, suggestPromptCompletions } from "./services/openai";
+import { generatePlaylistFromPrompt, generateAdvancedPlaylistFromPrompt, modifyPlaylist, get_playlist_criteria_from_prompt, assistantExplainFeatures, suggestPromptCompletions, generateCompletion } from "./services/openai";
 import { PlaylistEditor } from "./services/playlist-editor";
-import { updateTrackSchema, type InsertUserPreferences } from "@shared/schema";
+import { updateTrackSchema, type InsertUserPreferences } from "../shared/schema";
 import { z } from "zod";
 
 // Extend express session to include userId
