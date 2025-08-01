@@ -4,8 +4,7 @@ module.exports = {
   extensionsToTreatAsEsm: ['.ts'],
   testMatch: ['**/server/tests/**/*.test.ts'],
   globals: {
-    'ts-jest': {
-
+    'ts-jest': {}
   },
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/client/src/$1',
